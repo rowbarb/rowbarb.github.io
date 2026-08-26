@@ -1,0 +1,2896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rowan Barbalich — Mechanical Engineer, Robotics & Control Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0d0d0b;
+    --paper: #f4f1e8;
+    --paper-dim: #b9b6ac;
+    --accent: #ff4a1f;
+    --neon-green: #39ff14;
+    --neon-yellow: #f4ff26;
+    --line: #2b2a26;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Inter', sans-serif;
+    --display: 'Bricolage Grotesque', var(--sans);
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--paper);
+    font-family: var(--sans);
+    height: 100%;
+  }
+
+  body { overflow-x: hidden; }
+
+  a { color: inherit; text-decoration: none; }
+
+  @media (hover: hover) {
+    html, body, a, button { cursor: none; }
+  }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px clamp(20px, 5vw, 56px);
+    mix-blend-mode: difference;
+  }
+  .nav-mark {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    font-size: 0.9rem;
+    color: var(--paper-dim);
+  }
+  .nav-links a:hover { color: var(--paper); }
+
+  /* ---------- cursor dot ---------- */
+  .cursor-dot {
+    position: fixed;
+    top: 0; left: 0;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--neon-green);
+    pointer-events: none;
+    z-index: 300;
+    transform: translate(-50%, -50%);
+    mix-blend-mode: difference;
+    /* Pixel-precise green→purple over any real text on the page (nav, name, copy, everything)
+       — genuine mix-blend-mode, not an approximation. Stars are excluded from this without any
+       special-casing: .starfield (z-index 301) and .schematic (z-index 302) both paint AFTER
+       this dot (z-index 300), so the stars/arm are never part of what's "beneath" the dot —
+       structurally impossible for them to be in its blend backdrop. */
+  }
+  @media (hover: none) { .cursor-dot { display: none; } }
+  /* The lightbox (z-index 400) otherwise paints over the fixed cursor dot (z-index 300),
+     making it invisible while viewing an enlarged image. Only bump the dot above the lightbox
+     while it's actually open, so the hero's cursor-behind-stars stacking (z-index 301-303)
+     stays untouched everywhere else. */
+  body:has(.lightbox.open) .cursor-dot { z-index: 450; }
+
+  /* ---------- hero ---------- */
+  .hero {
+    min-height: 100svh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 clamp(20px, 5vw, 56px) clamp(140px, 18vh, 200px);
+    max-width: 1800px;
+    margin: 0 auto;
+  }
+
+  .hero-kicker {
+    position: relative;
+    z-index: 1;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .hero-kicker span { display: inline-block; }
+
+  .hero-title {
+    position: relative;
+    z-index: 1;
+    font-family: var(--display);
+    font-weight: 700;
+    line-height: 0.86;
+    font-size: clamp(2.78rem, 12vw, 9.08rem); /* -5pt (~0.42rem) off both ends of the old 3.2/9.5rem range */
+    letter-spacing: -0.02em;
+    overflow: hidden;
+    user-select: none; /* purely interactable now, not selectable/highlightable text */
+    -webkit-user-drag: none; /* Safari can still start a native drag-the-content gesture even with user-select:none — this is the property that actually stops it */
+  }
+  .hero-title .line { display: block; overflow: hidden; }
+  .hero-title .line span { display: inline-block; transform: translateY(110%); }
+  .hero-title .accent-word { color: var(--accent); font-style: italic; }
+  /* The real h stays in the flow (so the word doesn't reshuffle) but invisible — the visible
+     version is the clone in #letterLayer. n and i are back to being plain letters. */
+  .hero-title .grab-letter { visibility: hidden; }
+
+  .letter-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 303; /* above .schematic (302) — a held or merely-passed-over letter never disappears under the blob */
+    pointer-events: none;
+    overflow: visible;
+  }
+  /* One per grabbable letter, sized/positioned to match that letter's own text line, exactly
+     like .hero-title .line does for the real letters. Concealed behind this box's bottom edge
+     until the clone rises above it, then (once the intro finishes) switched to overflow: visible
+     so dragging isn't clipped by a box the letter has long since left. */
+  .letter-clip {
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .letter-clone {
+    position: absolute;
+    display: inline-block;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-drag: none;
+    transform: translateY(110%); /* same starting point as the rest of the name, so it rises in together with it */
+  }
+  /* Yellow twin of each letter, clipped to a circle matching the blob's live position/size
+     (updated every frame in JS) — same white→yellow reveal as the stars, just done with a CSS
+     clip-path instead of an SVG one. Starts fully clipped away so there's no flash before the
+     first frame runs. */
+  .letter-reveal {
+    color: var(--neon-yellow);
+    clip-path: circle(0px at 0px 0px);
+  }
+
+  .hero-sub {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 40px;
+    margin-top: 44px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+  }
+
+  .hero-copy {
+    max-width: 460px;
+    color: var(--paper-dim);
+    font-size: 1.02rem;
+    line-height: 1.6;
+  }
+
+  .spec-block {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--paper-dim);
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 6px 24px;
+    white-space: nowrap;
+  }
+  .spec-block dt { color: var(--paper-dim); }
+  .spec-block dd { color: var(--paper); }
+
+  .schematic {
+    position: absolute;
+    /* Above the cursor dot (z-index: 300) and above .starfield below, in that order — so the
+       cursor now travels behind the whole star/arm scene instead of covering it. .hero itself
+       doesn't create its own stacking context (position: relative with no z-index), so these
+       values are compared directly against the cursor dot's, not scoped away from it. */
+    z-index: 302;
+    top: 6%;
+    right: clamp(-20px, 3vw, 40px);
+    width: min(50vw, 560px);
+    pointer-events: none;
+  }
+  .schematic svg { width: 100%; height: auto; overflow: visible; }
+  .arm-link {
+    stroke: var(--paper-dim);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+  .arm-link.end-effector {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .arm-joint { fill: var(--paper-dim); }
+  /* Derived (non-actuated) joint — see the markup comment on #jointWrist for why. Hollow instead
+     of solid, same stroke weight family as everything else here. */
+  .arm-joint.derived {
+    fill: none;
+    stroke: var(--paper-dim);
+    stroke-width: 1.2;
+  }
+  .grip-blob { pointer-events: none; }
+  .orbit-sphere { pointer-events: none; }
+
+  /* ---------- joint dials (Five Pebbles/Iterator-terminal reference) ---------- */
+  /* Plain circle now — no tick texture — for q1/q2, the two actuated joints. */
+  .joint-ring {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 0.75;
+    opacity: 0.5;
+    filter: url(#jointGlow);
+  }
+  .joint-needle {
+    stroke: var(--accent);
+    stroke-width: 1.1;
+    stroke-linecap: round;
+    opacity: 0.95;
+    filter: url(#jointGlow);
+  }
+  /* q3's ring-of-dots, replacing what used to be a dashed circle — still visually distinct from
+     q1/q2's solid ring (derived, not actuated), just via dots instead of dashes. This whole group
+     gets its own counter-rotation every frame in updateArm(), independent of the needle. */
+  .joint-ring-dot {
+    fill: var(--accent);
+    opacity: 0.5;
+  }
+
+
+  .axis-line { stroke-width: 1.1; opacity: 0.6; }
+  .axis-x { stroke: var(--accent); }
+  .axis-y { stroke: var(--paper-dim); }
+  .axis-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    fill: var(--paper);
+    opacity: 0.9;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+
+  .angle-sector {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 0.75;
+    opacity: 0.55;
+  }
+
+  /* Dashed line from the base straight to the raw cursor/target point (drawn BEFORE the solid
+     links in markup, so it sits underneath them). When the target is within reach this line sits
+     almost entirely hidden under the solid arm — they're nearly coincident. When the target is
+     out of reach, the solid arm stops short (solveIK clamps it) and this dashed line keeps going,
+     so the visible dashed stub becomes a live illustration of "requested vs. achievable." */
+  .target-line {
+    stroke: var(--paper-dim);
+    stroke-width: 1;
+    opacity: 0.4; /* fallback only — overridden every frame by an eased inline opacity in JS, see updateArm() */
+    stroke-dasharray: 3 4;
+  }
+
+  .sector-label-reveal {
+    fill: var(--accent);
+    opacity: 1;
+    clip-path: url(#jointsClip);
+  }
+
+  /* Static diagram caption — link lengths / DOF / solve method. Anchored bottom-right of the
+     arm's own viewBox (opposite corner from the base pivot at x=70, the side the arm swings
+     into least often) so it reads as an annotation of this specific schematic, not part of the
+     personal spec-block under the name. Never touched per-frame — it's constant data, not a
+     live readout like the joint labels. */
+  .arm-spec {
+    font-family: var(--mono);
+    font-size: 9px;
+    fill: var(--paper-dim);
+    opacity: 0.65;
+    letter-spacing: 0.02em;
+    text-anchor: end;
+  }
+
+  .starfield {
+    position: absolute;
+    inset: 0;
+    z-index: 301; /* above the cursor dot (300), below .schematic (302) so the blob still covers stars */
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .starfield svg { width: 100%; height: 100%; display: block; }
+
+  .hero-star {
+    font-family: var(--mono);
+    fill: var(--paper);
+    text-anchor: middle;
+    dominant-baseline: central;
+    user-select: none;
+    opacity: 0.7;
+  }
+
+  .star-reveal {
+    font-family: var(--mono);
+    fill: var(--neon-yellow);
+    text-anchor: middle;
+    dominant-baseline: central;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .scroll-cue {
+    position: absolute;
+    z-index: 1;
+    bottom: 64px;
+    left: clamp(20px, 5vw, 56px);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--paper-dim);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .scroll-cue .bar {
+    width: 1px; height: 28px;
+    background: var(--paper-dim);
+    position: relative;
+    overflow: hidden;
+  }
+  .scroll-cue .bar::after {
+    content: '';
+    position: absolute;
+    top: -100%; left: 0; right: 0; height: 100%;
+    background: var(--accent);
+    animation: scrollbar 1.6s ease-in-out infinite;
+  }
+  @keyframes scrollbar { 50% { top: 100%; } 100% { top: 100%; } }
+
+  /* ---------- marquee ---------- */
+  .marquee-wrap {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 18px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .marquee-track {
+    display: inline-flex;
+    animation: marquee 26s linear infinite;
+  }
+  .marquee-track span {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.4rem;
+    padding: 0 28px;
+    color: var(--paper-dim);
+    display: inline-flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .marquee-track span::after {
+    content: '—';
+    color: var(--accent);
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* ---------- filler so scroll/lenis is testable ---------- */
+  .filler {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    padding: 0 clamp(20px, 5vw, 56px);
+    max-width: 1800px;
+    margin: 0 auto;
+    color: var(--paper-dim);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+  }
+
+  /* ---------- new framework: index/spec-sheet language (TE + SpaceX + resume-timeline) ---------- */
+  .index-kicker {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+  }
+
+  .stmt-section, .work-section, .cta-section {
+    padding: 140px clamp(20px, 5vw, 56px);
+    max-width: 1800px;
+    margin: 0 auto;
+  }
+  .stmt-section.alt-bg { background: #131210; }
+
+  .stmt {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    max-width: 1000px;
+    margin-bottom: 56px;
+  }
+  .stmt-dim { display: block; color: var(--paper-dim); font-weight: 500; }
+  .stmt-huge {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(3.2rem, 9vw, 7rem);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+  }
+  .cta-dot { color: var(--accent); }
+  .content-lede { color: var(--paper-dim); max-width: 560px; font-size: 1.05rem; line-height: 1.7; margin-bottom: 40px; }
+
+  /* about: spec table, like a datasheet parameter list */
+  .spec-table { border-top: 1px solid var(--line); max-width: 1000px; }
+  .spec-row {
+    display: grid;
+    grid-template-columns: 140px 1fr auto;
+    gap: 24px;
+    align-items: baseline;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .spec-key { font-family: var(--mono); font-size: 0.78rem; color: var(--accent); letter-spacing: 0.04em; }
+  .spec-val { color: var(--paper); font-size: 1rem; line-height: 1.6; }
+  .spec-meta { font-family: var(--mono); font-size: 0.75rem; color: var(--paper-dim); white-space: nowrap; text-align: right; }
+
+  /* work: numbered index list + hover-swapped preview panel */
+  .work-list { border-top: 1px solid var(--line); }
+  .work-item { border-bottom: 1px solid var(--line); }
+  .work-row {
+    all: unset;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 56px 1fr auto 28px;
+    align-items: baseline;
+    gap: 20px;
+    width: 100%;
+    padding: 22px 4px;
+    cursor: pointer;
+    transition: padding-left 0.2s ease, background 0.2s ease;
+  }
+  .work-row:hover { padding-left: 14px; background: rgba(255, 74, 31, 0.05); }
+  .work-num {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--paper-dim);
+    transition: color 0.2s ease;
+  }
+  .work-row:hover .work-num { color: var(--accent); }
+  .work-name {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--paper);
+    grid-row: 1;
+  }
+  .work-tag {
+    grid-column: 2;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--paper-dim);
+    margin-top: 4px;
+  }
+  .work-meta {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--paper-dim);
+    white-space: nowrap;
+    text-align: right;
+    align-self: start;
+  }
+  .work-toggle {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    color: var(--paper-dim);
+    text-align: center;
+    align-self: start;
+    transition: transform 0.25s ease, color 0.2s ease;
+  }
+  .work-row:hover .work-toggle { color: var(--accent); }
+  .work-item.open .work-toggle { transform: rotate(45deg); color: var(--accent); }
+
+  /* accordion: grid-template-rows 0fr -> 1fr trick, no JS height measuring needed */
+  .work-detail-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s ease;
+  }
+  .work-item.open .work-detail-wrap { grid-template-rows: 1fr; }
+  .work-detail-inner { overflow: hidden; }
+  .work-detail {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 40px;
+    padding: 8px 4px 40px;
+  }
+  .work-detail-media {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    background: #131210;
+    align-self: start;
+  }
+  .work-detail-media.lightbox-trigger { cursor: pointer; transition: border-color 0.2s ease; }
+  .work-detail-media.lightbox-trigger:hover { border-color: var(--accent); }
+  .work-detail-media img { width: 100%; height: auto; display: block; }
+  .work-detail-media svg { width: 100%; height: auto; aspect-ratio: 4 / 3; padding: 24px; color: var(--accent); }
+  .work-detail-copy p { color: var(--paper-dim); line-height: 1.75; font-size: 0.98rem; margin-bottom: 20px; }
+  .work-detail-copy em { color: var(--paper); font-style: italic; }
+  .work-stats { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .work-stats li {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--paper-dim);
+    padding-left: 18px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .work-stats li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .work-gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .work-gallery button {
+    all: unset;
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+  }
+  .work-gallery button:hover { border-color: var(--accent); }
+  .work-gallery img { width: 100%; height: 100%; object-fit: contain; display: block; background: #131210; }
+  .work-gallery figure { margin: 0; }
+  .work-gallery figcaption, .work-detail-caption {
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--paper-dim);
+    margin-top: 8px;
+  }
+  .work-detail-caption { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+
+  /* ---------- lightbox: click a gallery thumbnail, or the main detail image, to open ---------- */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    background: rgba(13, 13, 11, 0.96);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 60px 80px;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox-frame { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .lightbox img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+  .lightbox-caption {
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    color: var(--paper-dim);
+    max-width: 720px;
+    text-align: center;
+    margin-top: 20px;
+  }
+  .lightbox-counter {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--paper-dim);
+    margin-top: 10px;
+  }
+  .lightbox-close, .lightbox-prev, .lightbox-next {
+    all: unset;
+    box-sizing: border-box;
+    position: fixed;
+    cursor: pointer;
+    color: var(--paper);
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: rgba(19, 18, 16, 0.8);
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+  .lightbox-close:hover, .lightbox-prev:hover, .lightbox-next:hover { border-color: var(--accent); color: var(--accent); }
+  .lightbox-close { top: 28px; right: 28px; width: 40px; height: 40px; font-size: 1.3rem; }
+  .lightbox-prev, .lightbox-next { top: 50%; transform: translateY(-50%); width: 52px; height: 52px; font-size: 1.4rem; }
+  .lightbox-prev { left: 24px; }
+  .lightbox-next { right: 24px; }
+
+  @media (max-width: 700px) {
+    .lightbox { padding: 90px 20px; }
+    .lightbox-prev { left: 8px; width: 42px; height: 42px; }
+    .lightbox-next { right: 8px; width: 42px; height: 42px; }
+  }
+
+  /* experience: manifest/launch-list style */
+  .manifest { border-top: 1px solid var(--line); max-width: 900px; }
+  .manifest-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 110px;
+    gap: 24px;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .manifest-date { font-family: var(--mono); font-size: 0.78rem; color: var(--accent); }
+  .manifest-role { font-family: var(--display); font-weight: 600; font-size: 1.1rem; margin-bottom: 8px; }
+  .manifest-co { font-family: var(--sans); font-weight: 400; color: var(--paper-dim); font-size: 0.95rem; }
+  .manifest-desc { color: var(--paper-dim); font-size: 0.92rem; line-height: 1.6; }
+  .manifest-loc { font-family: var(--mono); font-size: 0.75rem; color: var(--paper-dim); text-align: right; }
+  .other-exp { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 40px; }
+  .exp-tag { font-family: var(--mono); font-size: 0.78rem; padding: 7px 13px; border-radius: 4px; border: 1px solid var(--line); color: var(--paper-dim); }
+
+  /* buttons */
+  .btn {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 13px 26px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    transition: all 0.18s ease;
+  }
+  .btn-primary { background: var(--accent); color: #140600; font-weight: 600; }
+  .btn-primary:hover { background: #ff6a3f; transform: translateY(-1px); }
+  .btn-outline { border-color: var(--line); color: var(--paper); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .contact-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+
+  .site-footer {
+    border-top: 1px solid var(--line);
+    padding: 30px clamp(20px, 5vw, 56px);
+    max-width: 1800px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--paper-dim);
+  }
+  .site-footer a:hover { color: var(--accent); }
+
+  @media (max-width: 900px) {
+    .work-detail { grid-template-columns: 1fr; }
+    .work-gallery { grid-template-columns: repeat(2, 1fr); }
+    .work-row { grid-template-columns: 40px 1fr 24px; }
+    .work-meta { display: none; }
+    .manifest-row { grid-template-columns: 1fr; gap: 8px; }
+    .manifest-loc { text-align: left; }
+    .spec-row { grid-template-columns: 1fr; gap: 6px; }
+    .spec-meta { text-align: left; }
+  }
+</style>
+</head>
+<body id="top">
+
+<div class="cursor-dot" id="cursorDot"></div>
+
+<nav class="nav">
+  <a href="#top" class="nav-mark">RB</a>
+  <div class="nav-links">
+    <a href="#about">about</a>
+    <a href="#work">work</a>
+    <a href="#contact">contact</a>
+  </div>
+</nav>
+
+<section class="hero">
+
+  <p class="hero-kicker"><span>MECHANICAL ENGINEER — ROBOTICS &amp; CONTROL SYSTEMS</span></p>
+  <h1 class="hero-title">
+    <span class="line"><span>Rowan</span></span>
+    <span class="line"><span>Barbalic<span class="grab-letter" id="letterH">h</span><span class="accent-word">.</span></span></span>
+  </h1>
+  <!-- The h is the only moveable letter. It's hidden here (not removed — keeps the word's
+       layout/kerning intact) and its visible, draggable version is the clone in #letterLayer,
+       living as a sibling of .hero-title rather than inside it, at its own high z-index, for
+       the same reason .starfield/.schematic do: .hero-title's own stacking slot caps whatever
+       z-index its children ask for, so nothing nested inside it could ever render above the
+       arm's blob. -->
+  <div class="letter-layer" id="letterLayer"></div>
+
+  <div class="hero-sub">
+    <p class="hero-copy">
+      I design, build, and control physical things — CAD to CNC to closed-loop
+      controller. M.E. from Stevens Institute of Technology, concentration in
+      Control Systems. Looking for a team that builds real hardware.
+    </p>
+    <dl class="spec-block">
+      <dt>base</dt><dd>Hoboken, NJ</dd>
+      <dt>status</dt><dd>open to relocation</dd>
+      <dt>grad</dt><dd>05 / 2026</dd>
+    </dl>
+  </div>
+
+  <div class="starfield" id="starfield">
+    <svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMin meet" id="starSvg">
+      <!-- "meet" (not "slice") so the whole viewBox is always visible, never cropped.
+           preserveAspectRatio is xMidYMin, not xMidYMid: .hero has no top padding and nav is
+           position:fixed (out of flow), so .hero's own top edge already sits at the true top of
+           the viewport — same vertical band as the nav. The earlier xMidYMid centering was
+           adding a blank letterbox gap above y=0 of this viewBox, pushing every star down from
+           that shared top edge regardless of their y-value. Aligning to YMin removes that gap,
+           so y=0 here now renders flush with the top of .hero (and thus close to the nav).
+           Placement below is read directly off your marked-up screenshot — one star per
+           red dot, none of your own auto-placed layout left in.
+           17 more added along the very top, above all of these — closest to "around the
+           RB/about/work/contact" nav a hero-scoped, scrolls-with-the-page SVG can get (it still
+           can't be pinned to the nav's own fixed box, so it won't hold that level if you scroll).
+           The 15 that were sitting lowest among this batch got pulled higher still (kept
+           the 2 already-highest, x=80 and x=720, right where they were) — spread across a 0-12
+           band instead of a literal "0-7cm" (this SVG's coordinate space is abstract, not tied
+           to a physical unit, so that's an approximation, not a conversion). -->
+      <!-- Big dipper (do not move/delete): the 7 stars below are the ones you circled — left
+           untouched, in file order and coordinates, through the thinning/redistribution pass. -->
+      <text class="hero-star" x="498" y="53">*</text>
+      <text class="hero-star" x="415" y="85">*</text>
+      <text class="hero-star" x="603" y="77">*</text>
+      <text class="hero-star" x="690" y="107">*</text>
+      <text class="hero-star" x="816" y="123">*</text>
+      <text class="hero-star" x="698" y="181">*</text>
+      <text class="hero-star" x="782" y="190">*</text>
+
+      <!-- Everything else: was 24 stars, too dense and all crammed into the top band. Thinned to
+           14 (10 deleted) and spread across the full width and a taller y-range so they frame the
+           dipper and fill the rest of the field instead of piling on top of it. -->
+      <text class="hero-star" x="40" y="15">*</text>
+      <text class="hero-star" x="170" y="60">*</text>
+      <text class="hero-star" x="300" y="20">*</text>
+      <text class="hero-star" x="60" y="140">*</text>
+      <text class="hero-star" x="220" y="200">*</text>
+      <text class="hero-star" x="350" y="150">*</text>
+      <text class="hero-star" x="469" y="269">*</text>
+      <text class="hero-star" x="890" y="20">*</text>
+      <text class="hero-star" x="950" y="90">*</text>
+      <text class="hero-star" x="870" y="200">*</text>
+      <text class="hero-star" x="960" y="240">*</text>
+      <text class="hero-star" x="451" y="178">*</text>
+      <text class="hero-star" x="597" y="193">*</text>
+      <text class="hero-star" x="651" y="0">*</text>
+      <text class="hero-star" x="900" y="240">*</text>
+
+      <!-- New batch: the arm is anchored to the right side of the hero (.schematic sits at
+           right:~0, width:50vw), so its reachable envelope is the right half of this field, not
+           the full width. These sit in that right-side zone (x=550-1000), in the band just below
+           the original top cluster but still clearly above .hero-title/.hero-copy (which start
+           around y~270+) — never below the name, only filling the gap above it. -->
+      <text class="hero-star" x="620" y="220">*</text>
+      <text class="hero-star" x="760" y="240">*</text>
+      <text class="hero-star" x="880" y="215">*</text>
+      <text class="hero-star" x="940" y="250">*</text>
+      <text class="hero-star" x="680" y="255">*</text>
+      <text class="hero-star" x="820" y="235">*</text>
+      <text class="hero-star" x="950" y="200">*</text>
+      <text class="hero-star" x="720" y="205">*</text>
+      <text class="hero-star" x="600" y="245">*</text>
+      <text class="hero-star" x="870" y="255">*</text>
+    </svg>
+  </div>
+
+  <div class="schematic" id="schematic">
+    <svg viewBox="0 0 400 420" id="armSvg">
+      <defs>
+        <!-- Arrowhead triangles narrowed (base was the full 0-6 height, now 1.5-4.5, a slimmer
+             point) — this only changes the marker's own shape, not .axis-line's stroke-width, so
+             the stem stays exactly as thick as it was; only the head at the tip gets thinner. -->
+        <marker id="arrowAccent" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,1.5 L6,3 L0,4.5 Z" fill="#ff4a1f" />
+        </marker>
+        <marker id="arrowPaper" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,1.5 L6,3 L0,4.5 Z" fill="#b9b6ac" />
+        </marker>
+        <clipPath id="blobClip" clipPathUnits="userSpaceOnUse">
+          <ellipse id="blobClipShape" cx="70" cy="390" rx="8" ry="8" />
+        </clipPath>
+        <!-- Union of all three joint dots plus the three segments connecting them, one shared
+             clip for all three angle labels — the same idea as blobClip/the star reveal, just
+             more shapes. Whichever label happens to be passing over any joint OR any segment
+             (not necessarily its own) gets revealed orange in that overlapping sliver, tracked
+             live every frame below. Segments need actual filled shapes here (a plain stroked
+             <line> has zero area and clips nothing), so each is a thin rotated rectangle instead,
+             matched to that segment's real on-screen width. -->
+        <clipPath id="jointsClip" clipPathUnits="userSpaceOnUse">
+          <circle id="jointsClipBase" cx="70" cy="390" r="4.5" />
+          <circle id="jointsClipElbow" cx="70" cy="390" r="4.5" />
+          <circle id="jointsClipWrist" cx="70" cy="390" r="3.5" />
+          <polygon id="jointsClipL1" points="70,390 70,390 70,390 70,390" />
+          <polygon id="jointsClipL2" points="70,390 70,390 70,390 70,390" />
+          <polygon id="jointsClipL3" points="70,390 70,390 70,390 70,390" />
+        </clipPath>
+        <!-- Soft amber bloom for the joint dials below — the Five Pebbles/Iterator-terminal
+             reference: glowing rings and needles against the flat dark schematic, not a hard
+             edge. Kept subtle (small stdDeviation) and applied only to rings/needles, not the
+             fine tick marks, so the tick texture stays crisp against the glow instead of
+             smearing into it. -->
+        <filter id="jointGlow" x="-150%" y="-150%" width="400%" height="400%">
+          <feGaussianBlur stdDeviation="1.3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Mounting base: an obtuse isosceles triangle sitting under the base joint, apex
+           pointing up into the pivot, corners slightly filleted. Hollow (fill: none), same
+           stroke as segments 1/2 via .arm-link. Drawn first so it sits behind everything.
+           Actual "d" is computed/kept in sync every frame inside updateArm() below. -->
+      <path id="armBase" class="arm-link" fill="none" stroke-linejoin="round" />
+
+      <line id="armL1" class="arm-link" x1="70" y1="390" x2="70" y2="390" />
+      <line id="armL2" class="arm-link" x1="70" y1="390" x2="70" y2="390" />
+      <line id="armL3" class="arm-link end-effector" x1="70" y1="390" x2="70" y2="390" />
+
+      <!-- Joint dials — Five Pebbles/Iterator-terminal styling: a glowing ring (plain circle for
+           q1/q2, a ring of dots for q3) plus one longer bright needle that actually rotates to
+           the joint's own live angle (the same angle the axis arrow at that joint already points
+           along) — so it's a second, more eye-catching confirmation of the same real motion, not
+           just decoration. Built once at setup (buildJointDial/buildDotRing, in the script below)
+           rather than hand-typed here: each is empty in markup, filled programmatically.
+           Deliberately drawn BEFORE the arm-joint dot circles further down, so the dot sits on top
+           as a hub cap over the needle's pivot — the needle reads as emerging from under it, the
+           way a real clock hand emerges from its hub, rather than floating on top of it. Position
+           updates every frame via a translate on the group; see updateArm(). -->
+      <g id="jointDialBase"></g>
+      <g id="jointDialElbow"></g>
+      <g id="jointDialWrist"></g>
+
+      <circle id="jointBase" class="arm-joint" cx="70" cy="390" r="5" />
+      <circle id="jointElbow" class="arm-joint" cx="70" cy="390" r="4.5" />
+      <!-- "derived" — q3 isn't an independently actuated joint in this model (see the comment
+           where q3 is computed in updateArm()), it's solved so the end-effector stays aimed at
+           the target. Hollow instead of filled, and its dial ring below is dashed instead of
+           solid, so the two actuated joints (solid pebble, solid ring) read as visually distinct
+           from this one (hollow pebble, dashed ring) — an actual, correct distinction, not just
+           variety for its own sake. -->
+      <circle id="jointWrist" class="arm-joint derived" cx="70" cy="390" r="3.5" />
+
+      <!-- Dashed base→target line — moved to draw AFTER the solid links (was before, i.e.
+           underneath them). A 2-link arm's actual path bends at the elbow, it doesn't ride along
+           the straight base→target line except momentarily, so with the line underneath, the
+           opaque solid links were constantly sweeping across and occluding chunks of it as the
+           arm moved — reading as the dashed trail randomly vanishing/"losing" the cursor, not a
+           tracking bug at all, just a paint-order problem. On top, it's never covered by the
+           arm's own body. x2/y2 track the raw target every frame (the actual cursor/automation
+           target, before it gets pulled back by L3). -->
+      <line id="targetLine" class="target-line" x1="70" y1="390" x2="70" y2="390" />
+
+      <line id="axBaseX" class="axis-line axis-x" x1="70" y1="390" x2="70" y2="390" marker-end="url(#arrowAccent)" />
+      <line id="axBaseY" class="axis-line axis-y" x1="70" y1="390" x2="70" y2="390" marker-end="url(#arrowPaper)" />
+      <line id="axElbowX" class="axis-line axis-x" x1="70" y1="390" x2="70" y2="390" marker-end="url(#arrowAccent)" />
+      <line id="axElbowY" class="axis-line axis-y" x1="70" y1="390" x2="70" y2="390" marker-end="url(#arrowPaper)" />
+      <line id="axWristX" class="axis-line axis-x" x1="70" y1="390" x2="70" y2="390" marker-end="url(#arrowAccent)" />
+      <line id="axWristY" class="axis-line axis-y" x1="70" y1="390" x2="70" y2="390" marker-end="url(#arrowPaper)" />
+
+      <text id="labelQ1" class="axis-label" x="70" y="390">q1</text>
+      <text id="labelQ2" class="axis-label" x="70" y="390">q2</text>
+      <text id="labelQ3" class="axis-label" x="70" y="390">q3</text>
+
+      <!-- White-to-orange reveal for each label, same trick as the star hover: an orange twin of
+           the exact same text, always kept in the exact same spot, clipped to jointsClip so only
+           the sliver actually overlapping a joint dot ever shows through. -->
+      <text id="labelQ1Reveal" class="axis-label sector-label-reveal" x="70" y="390">q1</text>
+      <text id="labelQ2Reveal" class="axis-label sector-label-reveal" x="70" y="390">q2</text>
+      <text id="labelQ3Reveal" class="axis-label sector-label-reveal" x="70" y="390">q3</text>
+
+      <!-- Pizza-slice angle indicators: thin outlined sectors at each joint, spanning from the
+           incoming link's heading to the outgoing one — visualizing q1/q2/q3's actual magnitude
+           as a wedge rather than just the two axis arrows. Drawn after the axis lines/labels so
+           they layer on top; "d" is computed every frame in updateArm() alongside everything else. -->
+      <path id="sectorQ1" class="angle-sector" />
+      <path id="sectorQ2" class="angle-sector" />
+      <path id="sectorQ3" class="angle-sector" />
+
+      <!-- End-effector: plain flat-fill circle, no gradient/highlight/gooey shape — just the
+           existing size/color change on grip (see blobRadius/blobColorAmt in updateArm()). -->
+      <ellipse id="gripBlob" class="grip-blob" cx="70" cy="390" rx="8" ry="8" fill="#ff4a1f" />
+
+      <!-- 8 small satellite spheres orbiting the main end-effector. Built once below (buildOrbitSpheres),
+           each just a plain flat-fill circle — JS updates their cx/cy every frame from the main
+           blob's position plus a shared, continuously-advancing orbit angle. No filters, no glint. -->
+      <g id="orbitSpheres"></g>
+
+      <!-- Yellow star clones, painted after (= on top of) the blob and clipped to its exact
+           live shape (blobClipShape mirrors gripBlob every frame). Only the portion of a star
+           actually covered by the blob ever renders here — the rest of each star stays the
+           plain white original in the starfield layer underneath. -->
+      <g id="starReveal" clip-path="url(#blobClip)"></g>
+      <!-- Deliberately outside/unclipped: whichever star is actually gripped renders here in
+           full, guaranteed solid yellow, regardless of exact pixel overlap with the blob's
+           shape — "held" should always read as yellow, not just whatever sliver intersects. -->
+      <text id="heldStarReveal" class="star-reveal" x="70" y="390" opacity="0">*</text>
+
+      <!-- Diagram caption (see .arm-spec above for why this lives here, instead of in the
+           personal spec-block under the name). Top line is pure static identity now — just the
+           three link lengths, matching the L1/L2/L3 constants exactly; no DOF/method text
+           anymore, kept out entirely rather than risk it drifting out of sync with the model
+           again the way "3-DOF" once did. Bottom line is NOT static: it's overwritten every
+           ~120ms in updateArm() with R/D (the real law-of-cosines intermediates) plus a live arm
+           STATE — a separate <tspan>, not just more plain text, because its color changes with
+           the state (see the ARM_STATE_COLORS comment in updateArm() for the four states and why
+           each color was chosen). Starts with an em-dash placeholder so there's no empty flash
+           before the first update lands. -->
+      <text class="arm-spec" x="392" y="401">L1 180 &middot; L2 130 &middot; L3 50</text>
+      <text id="armSpecLive" class="arm-spec" x="392" y="413">R &mdash; &middot; D &mdash; &middot; <tspan id="armStateText">&mdash;</tspan></text>
+    </svg>
+  </div>
+
+  <div class="scroll-cue"><div class="bar"></div><span>scroll</span></div>
+</section>
+
+<div class="marquee-wrap">
+  <div class="marquee-track" id="marqueeTrack">
+    <span>SOLIDWORKS</span><span>MATLAB</span><span>ARDUINO</span><span>CNC MILLING</span><span>TIG WELDING</span><span>PID TUNING</span><span>ANSYS</span><span>PYTHON</span>
+    <span>SOLIDWORKS</span><span>MATLAB</span><span>ARDUINO</span><span>CNC MILLING</span><span>TIG WELDING</span><span>PID TUNING</span><span>ANSYS</span><span>PYTHON</span>
+  </div>
+</div>
+
+<section class="stmt-section" id="about">
+  <p class="index-kicker">01 / ABOUT</p>
+  <h2 class="stmt">
+    I design, build, and control physical systems —
+    <span class="stmt-dim">from CNC-fabricated thermal hardware to closed-loop mobile robots.</span>
+  </h2>
+  <div class="spec-table">
+    <div class="spec-row">
+      <span class="spec-key">DEGREE</span>
+      <span class="spec-val">M.E., Mechanical Engineering — Control Systems Concentration</span>
+      <span class="spec-meta">Stevens Institute of Technology · May 2026</span>
+    </div>
+    <div class="spec-row">
+      <span class="spec-key">DEGREE</span>
+      <span class="spec-val">B.E., Mechanical Engineering — Green Engineering Minor</span>
+      <span class="spec-meta">Stevens Institute of Technology · May 2025</span>
+    </div>
+    <div class="spec-row">
+      <span class="spec-key">COURSEWORK</span>
+      <span class="spec-val">Autonomous Navigation for Mobile Robots · Modern Control Engineering · Analytical Dynamics · Mobile Micro-robotic Systems</span>
+      <span class="spec-meta">GRAD</span>
+    </div>
+    <div class="spec-row">
+      <span class="spec-key">COURSEWORK</span>
+      <span class="spec-val">Design of Dynamical Systems · Thermal Engineering · Manufacturing Processes &amp; Systems · Fluid Mechanics</span>
+      <span class="spec-meta">UNDERGRAD</span>
+    </div>
+    <div class="spec-row">
+      <span class="spec-key">TOOLS</span>
+      <span class="spec-val">SolidWorks · MATLAB &amp; Simulink · ANSYS · Arduino/C++ · Python · CNC Milling · TIG Welding</span>
+      <span class="spec-meta">--</span>
+    </div>
+  </div>
+</section>
+
+<section class="work-section" id="work">
+  <p class="index-kicker">02 / WORK</p>
+  <h2 class="stmt">Nine projects.<span class="stmt-dim">Click to expand.</span></h2>
+
+  <div class="work-list" id="workList">
+
+      <div class="work-item">
+        <button class="work-row" data-kind="img" data-preview="images/squirp-robot.png">
+          <span class="work-num">01</span>
+          <span class="work-name">Autonomous Campus Tour Robot</span>
+          <span class="work-tag">Mechanical Design · Embedded Control · Navigation</span>
+          <span class="work-meta">YDLIDAR G4 · MQTT/Wi-Fi</span>
+          <span class="work-toggle">+</span>
+        </button>
+        <div class="work-detail-wrap">
+          <div class="work-detail-inner">
+            <div class="work-detail">
+              <div class="work-detail-media lightbox-trigger" data-caption="The assembled robot — tracked chassis, three ultrasonic sensors up front, and the GPS float mounted on top.">
+                <img src="images/squirp-robot.png" alt="Assembled autonomous campus tour robot with ultrasonic sensors, GPS float, and Arduino electronics" loading="lazy">
+              </div>
+              <div class="work-detail-copy">
+                <p>Designed and fabricated a 3D-printed autonomous ground robot integrating a
+                YDLIDAR G4 laser scanner and multiple ultrasonic sensors for real-time obstacle
+                detection. Wrote the path-planning and target-reaching logic in Arduino,
+                streaming live x-y position data over MQTT/Wi-Fi to navigate an outdoor obstacle
+                course with waypoints mapped to real campus landmarks.</p>
+                <ul class="work-stats">
+                  <li>YDLIDAR G4 laser scanner for real-time odometry</li>
+                  <li>Multi-sensor obstacle detection — ultrasonic + LiDAR</li>
+                  <li>Live path-planning telemetry over MQTT/Wi-Fi</li>
+                </ul>
+                <div class="work-gallery">
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/campus-target-map.png" data-caption="The mapped obstacle course overlaid on real Stevens campus buildings — SP marks the start, T1–T4 are waypoints visited in order, with real-world coordinates and building dimensions annotated for the path-planning code.">
+                      <img src="images/campus-target-map.png" alt="Target map overlaying navigation waypoints SP, T1–T4 on Stevens Institute campus buildings" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/campus-cad-orthographic.png" data-caption="Orthographic engineering drawings of the sensor mount — front, isometric, top, and side views used to check that the housing for three ultrasonic sensors would fit together correctly before printing it.">
+                      <img src="images/campus-cad-orthographic.png" alt="Orthographic CAD drawing of the ultrasonic sensor mount" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/campus-print-preview.png" data-caption="The sensor mount as sliced for 3D printing — each colored band is one layer the printer will trace, checked here for gaps or unsupported overhangs before committing to a print.">
+                      <img src="images/campus-print-preview.png" alt="3D print slicer preview of the sensor mount" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/campus-cad-top-motors.png" data-caption="A top-down view of the drive base showing the two rear motors angled outward from the centerline — this splayed mounting geometry widens the robot's effective wheelbase for better turning stability.">
+                      <img src="images/campus-cad-top-motors.png" alt="Top-down CAD view of the drive base showing motor mounting angles" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/campus-pcb-schematic.png" data-caption="The electronics schematic — a WeMos D1 microcontroller wired to an OLED display, three ultrasonic sensors, and a dual-channel motor driver, laid out here before the physical board was built.">
+                      <img src="images/campus-pcb-schematic.png" alt="PCB schematic showing WeMos D1, OLED display, ultrasonic sensors, and motor driver wiring" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/campus-cad-exploded-full.png" data-caption="Exploded SolidWorks assembly of the full robot — every layer from the tracked chassis up through the electronics stack to the GPS float, pulled apart to show how it all fits together.">
+                      <img src="images/campus-cad-exploded-full.png" alt="Exploded SolidWorks assembly of the full robot chassis and electronics stack" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/campus-cad-exploded-detail.png" data-caption="A closer exploded view of the sensor mount and drive base, showing how the ultrasonic sensors, control board, and wheels stack together.">
+                      <img src="images/campus-cad-exploded-detail.png" alt="Exploded SolidWorks detail view of the sensor mount and drive base" loading="lazy">
+                    </button>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="work-item">
+        <button class="work-row" data-kind="img" data-preview="images/gc-expo-poster.jpg">
+          <span class="work-num">02</span>
+          <span class="work-name">Programmable Gas Chromatography Oven</span>
+          <span class="work-tag">Thermal/Structural FEA · PID Control · CNC Fabrication</span>
+          <span class="work-meta">400°C · ~20-min cooldown</span>
+          <span class="work-toggle">+</span>
+        </button>
+        <div class="work-detail-wrap">
+          <div class="work-detail-inner">
+            <div class="work-detail">
+              <div class="work-detail-media lightbox-trigger" data-caption="The finished oven alongside its presentation poster at Stevens' Innovation Expo.">
+                <img src="images/gc-expo-poster.jpg" alt="The completed GC oven presented alongside its poster at Stevens Institute's Innovation Expo" loading="lazy">
+              </div>
+              <div class="work-detail-copy">
+                <p>Led the mechanical design team on a faculty-advised senior capstone (Group
+                A7, sponsored by GOW-MAC Instrument Co., advised by Dr. Zahra Pournorouz)
+                building a programmable GC oven — the core challenge being not just fast
+                heating, but fast <em>cooldown</em> between sample runs, since that's what
+                actually limits GC throughput. Validated the AISI 304 stainless steel enclosure
+                with SolidWorks structural (2 atm internal pressure), thermal, and CFD flow
+                analysis, then fabricated the inner and outer shells via CNC milling, lathe
+                work, riveting, and TIG welding. Built and tuned closed-loop PID temperature
+                control around an Arduino Mega, a nickel-chromium heating element, and a Type-K
+                thermocouple, with a relay-and-contactor-driven fan and a stepper-driven vent for
+                active cooling. Measured cooldown across three repeated trials confirmed the
+                design: from roughly 400°C down under 50°C in about 20 minutes, and back to
+                near-ambient by roughly half an hour.</p>
+                <ul class="work-stats">
+                  <li>Ramp targets: 40°C/min to 200°C, tapering to 7°C/min approaching 400°C</li>
+                  <li>Measured cooldown (3 trials): under 50°C by ~20 min, near-ambient by ~32 min</li>
+                  <li>6-bladed, 8" fan (120VAC, ~1700 RPM) paired with a stepper-driven vent</li>
+                  <li>Structural design verified to 2 atm internal pressure in SolidWorks FEA</li>
+                  <li>Presented at Stevens' Innovation Expo; led a 5-person, faculty-advised team</li>
+                </ul>
+                <div class="work-gallery">
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/gc-exploded-cad-2.jpg" data-caption="Exploded SolidWorks assembly — every layer of the oven, from outer shell to inner chamber to fan plate, pulled apart to show how it all fits together before anything was cut.">
+                      <img src="images/gc-exploded-cad-2.jpg" alt="Exploded SolidWorks assembly of the GC oven" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/gc-thermal-analysis.jpg" data-caption="Simulated heat spread inside the oven wall — warmer colors near the heating elements, cooler toward the outer shell, used to confirm the insulation would keep the outside safe to touch.">
+                      <img src="images/gc-thermal-analysis.jpg" alt="Thermal simulation of the oven interior" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/gc-circuit-schematic.jpg" data-caption="The full electronics schematic: an Arduino Mega reads the thermocouple through a PID controller, switches the heating coil via a solid-state relay, drives the fan through a contactor, and runs a stepper-controlled vent motor — all fed from separate 5V and 24V supplies.">
+                      <img src="images/gc-circuit-schematic.jpg" alt="Electronics schematic showing Arduino Mega, PID controller, relays, and motor wiring" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/gc-machining-photo.jpg" data-caption="Machining the vent holes on the mill — cutting coolant visible on the metal as each hole is drilled to spec.">
+                      <img src="images/gc-machining-photo.jpg" alt="Milling vent holes into sheet metal on a manual mill" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/gc-clamping-assembly.jpg" data-caption="Clamping the welded shell square while the top panel is drilled and fastened — the two brass discs are the thermocouple and vent ports.">
+                      <img src="images/gc-clamping-assembly.jpg" alt="Clamping and drilling the sheet-metal enclosure during assembly" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/gc-front-view-built.jpg" data-caption="The finished enclosure, front-facing, with the fan grille mounted — built and labeled in the machine shop.">
+                      <img src="images/gc-front-view-built.jpg" alt="Front view of the completed oven enclosure with fan grille" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/gc-full-wired-unit.jpg" data-caption="The complete unit with the motor, power supplies, relays, and Arduino Mega all wired up and mounted to the base rail.">
+                      <img src="images/gc-full-wired-unit.jpg" alt="Fully wired GC oven unit with motor and electronics mounted" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/gc-cool-rate-chart.jpg" data-caption="Measured cooldown across three repeated trials — the oven drops from roughly 400°C to under 50°C in about 20 minutes, and levels off near ambient by roughly 32 minutes. This is real measured data, not a simulation.">
+                      <img src="images/gc-cool-rate-chart.jpg" alt="Measured cooldown rate chart across three test trials" loading="lazy">
+                    </button>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="work-item">
+        <button class="work-row" data-kind="img" data-preview="images/sorting-completed-sim.jpg">
+          <span class="work-num">03</span>
+          <span class="work-name">Autonomous Puck Sorting &amp; Wall Avoidance</span>
+          <span class="work-tag">MATLAB &amp; Stateflow · Color Detection · Geometric Safety Model</span>
+          <span class="work-meta">6/6 trials · 82&ndash;167s</span>
+          <span class="work-toggle">+</span>
+        </button>
+        <div class="work-detail-wrap">
+          <div class="work-detail-inner">
+            <div class="work-detail">
+              <div class="work-detail-media lightbox-trigger" data-caption="The completed simulation — isometric, robot-eye, and top-down views showing the robot at rest at the origin after delivering both pucks to their matching color zones.">
+                <img src="images/sorting-completed-sim.jpg" alt="Completed simulation showing the robot at the origin after delivering both pucks" loading="lazy">
+              </div>
+              <div class="work-detail-copy">
+                <p>Built an autonomous puck-sorting robot in MATLAB's Robotics Playground with
+                a 5-person team (ME 598, Group WS8): the robot locates two RGB-colored pucks
+                using a forward-facing color detector, delivers each to its matching colored
+                zone, and returns to the arena's origin — tested across all six possible
+                puck-color permutations. Navigation runs on a Stateflow state machine (search
+                &rarr; grab &rarr; escort &rarr; return), with zone/origin guidance computed
+                outside the state machine in Simulink to avoid algebraic loops. The standout
+                piece is the wall-avoidance layer: instead of a heuristic repulsion behavior, it
+                analytically derives the minimum safe clearance from the robot's own geometry —
+                using an empirically measured 0.165m offset between the side sensor and the
+                robot's actual collision boundary — then runs as a continuous corrective layer
+                capped at 75% authority, so it steers the robot away from walls without
+                overriding the state machine's intent unless a collision is geometrically
+                unavoidable, at which point a full-authority "panic" maneuver takes over.</p>
+                <ul class="work-stats">
+                  <li>All 6 puck-color permutations succeeded (RG, RB, GR, GB, BR, BG)</li>
+                  <li>Fastest run: red-green in 82.1s; average ~120s across all 6</li>
+                  <li>Wall clearance derived analytically from sensor geometry, not tuned by hand</li>
+                  <li>Wall-avoidance capped at 75% authority except in a full-override "panic" mode</li>
+                  <li>Best run documented on <a href="https://www.youtube.com/watch?v=bjRtxRdJ4f4" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">video</a></li>
+                </ul>
+                <div class="work-gallery">
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/sorting-arena-annotated.jpg" data-caption="The arena, fully annotated before any code was written — origin, zone boundaries, and every key coordinate the robot's logic would need to reference.">
+                      <img src="images/sorting-arena-annotated.jpg" alt="Annotated diagram of the sorting arena with zone coordinates" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/sorting-zone-simulink.jpg" data-caption="The Simulink block that computes distance and heading to a target zone from the robot's current pose — kept outside the state machine specifically to avoid an algebraic loop.">
+                      <img src="images/sorting-zone-simulink.jpg" alt="Simulink model computing distance and heading to the target zone" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/sorting-walltrack-block.jpg" data-caption="The wall-avoidance correction block — takes in the three sensor distances and outputs a normalized steering correction, blended with (not replacing) the state machine's own motor commands.">
+                      <img src="images/sorting-walltrack-block.jpg" alt="Simulink block diagram of the wall-tracking correction logic" loading="lazy">
+                    </button>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="work-item">
+        <button class="work-row" data-kind="img" data-preview="images/dobot-dh-diagram.png">
+          <span class="work-num">04</span>
+          <span class="work-name">Dobot Robot Arm Kinematics</span>
+          <span class="work-tag">MATLAB · Denavit&ndash;Hartenberg Convention</span>
+          <span class="work-meta">5-DOF · RRRRR</span>
+          <span class="work-toggle">+</span>
+        </button>
+        <div class="work-detail-wrap">
+          <div class="work-detail-inner">
+            <div class="work-detail">
+              <div class="work-detail-media lightbox-trigger" data-caption="Hand-derived link geometry and joint-angle ranges used to build the Denavit-Hartenberg model, including the mechanical coupling that keeps the end effector pointing down."><img src="images/dobot-dh-diagram.png" alt="Hand-drawn diagram of Dobot link lengths, joint angles, and coordinate frames" loading="lazy"></div>
+              <div class="work-detail-copy">
+                <p>Derived and validated forward and inverse kinematic models for the Dobot, a
+                5-DOF RRRRR serial manipulator, using Denavit&ndash;Hartenberg convention
+                (&alpha; = [90°, 0°, 0°, -90°, 0°]). Modeled joint limits from the physical
+                hardware and validated the symbolic forward-kinematics solution against
+                simulated motion across three test trials.</p>
+                <ul class="work-stats">
+                  <li>Joint limits: base &plusmn;130°, shoulder 5°&ndash;95°, elbow 0°&ndash;120°</li>
+                  <li>Symbolic forward-kinematics solution validated across 3 trials</li>
+                  <li>Group project, ME 598 Introduction to Robotics</li>
+                </ul>
+                <div class="work-gallery">
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/dobot-dh-diagram.png" data-caption="Hand-derived link geometry and joint-angle ranges used to build the Denavit-Hartenberg model, including the mechanical coupling that keeps the end effector pointing down.">
+                      <img src="images/dobot-dh-diagram.png" alt="Hand-drawn diagram of Dobot link lengths, joint angles, and coordinate frames" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/dobot-workspace-side.png" data-caption="Side-view projections (x-z and y-z) of the reachable workspace, built by sweeping the forward-kinematics model across every joint-angle combination.">
+                      <img src="images/dobot-workspace-side.png" alt="Side view x-z and y-z projections of the Dobot's reachable workspace" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/dobot-workspace-3d.png" data-caption="The full 3D convex hull of reachable points — every point inside this shape is somewhere the arm's tip can physically reach, used to sanity-check that a target isn't being asked of the arm before it even tries to move there.">
+                      <img src="images/dobot-workspace-3d.png" alt="3D convex hull plot of the Dobot's reachable workspace" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/dobot-simulation.png" data-caption="The validated model driving the arm to a commanded target point in simulation, confirming the forward/inverse kinematics solve correctly.">
+                      <img src="images/dobot-simulation.png" alt="3D simulation of the Dobot reaching a target position" loading="lazy">
+                    </button>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="work-item">
+        <button class="work-row" data-kind="img" data-preview="images/coldplate-channel-geometry.png">
+          <span class="work-num">05</span>
+          <span class="work-name">MCM Cold Plate Design</span>
+          <span class="work-tag">SolidWorks · Thermal/Fluid Simulation</span>
+          <span class="work-meta">108W · &lt;40°C</span>
+          <span class="work-toggle">+</span>
+        </button>
+        <div class="work-detail-wrap">
+          <div class="work-detail-inner">
+            <div class="work-detail">
+              <div class="work-detail-media lightbox-trigger" data-caption="Dimensioned SolidWorks model of the microchannel cross-section — the 12 mm x 11 mm internal channel within the 20 mm x 14 mm aluminum block, with a 9 mm inlet offset."><img src="images/coldplate-channel-geometry.png" alt="Dimensioned SolidWorks model of the cold plate's microchannel cross-section" loading="lazy"></div>
+              <div class="work-detail-copy">
+                <p>Designed an aluminum (k = 190 W/m&middot;K) microchannel cold plate for
+                IBM's Thermal Conduction Module, sized to dissipate a 108 W chip load while
+                holding surface temperature under 40°C. Ran parametric SolidWorks studies
+                sweeping channel geometry and flow rate, then compared alternative plate
+                materials — PVC's low conductivity (k = 0.147 W/m&middot;K) let the surface
+                spike to 6076°C, underscoring how sensitive the design is to material choice.</p>
+                <ul class="work-stats">
+                  <li>Aluminum plate, k = 190 W/m&middot;K, 108 W chip load, &lt;40°C target</li>
+                  <li>Parametric SolidWorks sweep over channel geometry and flow rate</li>
+                  <li>PVC alternative spiked to 6076°C — material choice matters</li>
+                  <li>2-person team project, ME 354 Heat Transfer</li>
+                </ul>
+                <div class="work-gallery">
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/coldplate-thermal-study.jpg" data-caption="SolidWorks thermal simulation showing temperature distribution across the aluminum cold plate — hottest along the wall nearest the chip, coolest at the far corner.">
+                      <img src="images/coldplate-thermal-study.jpg" alt="SolidWorks thermal simulation showing temperature distribution across the aluminum cold plate" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/coldplate-channel-geometry.png" data-caption="Dimensioned SolidWorks model of the microchannel cross-section — the 12 mm x 11 mm internal channel within the 20 mm x 14 mm aluminum block, with a 9 mm inlet offset.">
+                      <img src="images/coldplate-channel-geometry.png" alt="Dimensioned SolidWorks model of the cold plate's microchannel cross-section" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/coldplate-problem-schematic.png" data-caption="The idealized 2D problem setup used for the analytical/parametric study: symmetric aluminum cold plate with a water channel, adiabatic top surface, and a uniform 1x10^5 W/m^2 heat flux applied at the base.">
+                      <img src="images/coldplate-problem-schematic.png" alt="Schematic of the cold plate thermal problem showing symmetry lines, water channel, and applied heat flux" loading="lazy">
+                    </button>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="work-item">
+        <button class="work-row" data-kind="img" data-preview="images/auv-bode-margins.jpg">
+          <span class="work-num">06</span>
+          <span class="work-name">AUV Pitch Control Compensator</span>
+          <span class="work-tag">MATLAB · PID/PD Design</span>
+          <span class="work-meta">PM 74.5° · GM 15.9dB</span>
+          <span class="work-toggle">+</span>
+        </button>
+        <div class="work-detail-wrap">
+          <div class="work-detail-inner">
+            <div class="work-detail">
+              <div class="work-detail-media lightbox-trigger" data-caption="Bode plot of the baseline closed-loop system across all three test gains (K=1.04, 4.11, 28.2) — magnitude shifts up with gain while phase stays fixed, showing directly how rising gain erodes the margins."><img src="images/auv-bode-margins.jpg" alt="Bode plot of the baseline pitch-control system across gains 1.04, 4.11, and 28.2" loading="lazy"></div>
+              <div class="work-detail-copy">
+                <p>Analyzed an unmanned submersible's pitch-control architecture via root
+                locus and Bode analysis (baseline: 74.5° phase margin, 15.9 dB gain margin at
+                K=1.04). Designed a PD compensator — K(s) = 1.47(s + 2.04) — then refined it
+                into a PID compensator to meet the project's &le;15% overshoot, &le;15s
+                settling time, and zero steady-state error requirements.</p>
+                <ul class="work-stats">
+                  <li>Baseline system: 74.5° phase margin, 15.9 dB gain margin</li>
+                  <li>PD compensator: K(s) = 1.47(s + 2.04)</li>
+                  <li>Final PID compensator meets &le;15% OS, &le;15s settling, zero SS error</li>
+                  <li>4-person team project, ME 483 Control Systems</li>
+                </ul>
+                <div class="work-gallery">
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/auv-block-diagram.jpg" data-caption="The pitch-control architecture: reference pitch angle, controller K(s), actuator G_elev(s), and pitch dynamics G_p(s) in a unity-feedback loop, with the plant transfer functions given below.">
+                      <img src="images/auv-block-diagram.jpg" alt="Block diagram of the pitch angle control architecture with controller, actuator, and plant transfer functions" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/auv-root-locus-baseline.jpg" data-caption="Baseline root locus. Poles and zeros all sit in the left half-plane, but the loci sweep into the right half-plane at higher gain — the three marked points (K=1.04, 4.11, 28.2) show stable, marginally stable, and unstable behavior respectively.">
+                      <img src="images/auv-root-locus-baseline.jpg" alt="Root locus of the baseline pitch angle control system with three marked gain points" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/auv-step-response-gains.jpg" data-caption="Step response at each of the three gains: K=1.04 is overdamped and stable, K=4.11 is underdamped but stable, and K=28.2 is unstable, growing without bound.">
+                      <img src="images/auv-step-response-gains.jpg" alt="Step response plots for gains 1.04, 4.11, and 28.2 showing overdamped, underdamped, and unstable behavior" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/auv-pd-design-editor.jpg" data-caption="MATLAB Control System Designer's root locus editor with the &le;15% overshoot / &le;15s settling-time constraint region shaded in yellow. The design point at the intersection of both constraints (-0.267 ± j0.442) sets the target for the PD compensator zero.">
+                      <img src="images/auv-pd-design-editor.jpg" alt="Root locus editor showing percent overshoot and settling time constraint boundaries for PD design" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/auv-pd-root-locus.jpg" data-caption="Root locus with the PD compensator zero placed at s=-2.03 and gain K=1.47 applied — the locus now passes through the design point, satisfying both the overshoot and settling-time requirements.">
+                      <img src="images/auv-pd-root-locus.jpg" alt="Root locus of the system with the PD compensator applied" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/auv-pd-step-response.jpg" data-caption="Step response with the PD compensator: 10.36% overshoot at 8.46s, settling in 12.78s — both within the &le;15% / &le;15s targets, though the system still carries steady-state error.">
+                      <img src="images/auv-pd-step-response.jpg" alt="Step response of the PD-compensated system showing 10.36% overshoot and 12.78s settling time" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/auv-pid-designer-k1.jpg" data-caption="First pass at the PID compensator (K_PID=1): the added integrator eliminates steady-state error, but settling time blows out to 43.39s — far beyond the 15s target, so the gain still needs tuning.">
+                      <img src="images/auv-pid-designer-k1.jpg" alt="Control System Designer session showing PID compensator at K=1 with 43.39s settling time" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/auv-pid-designer-k3.jpg" data-caption="After tuning the PID gain to K_PID=3: 13.95% overshoot and 14.5s settling time — both requirements met, with zero steady-state error now guaranteed by the integrator term. This is the final design.">
+                      <img src="images/auv-pid-designer-k3.jpg" alt="Control System Designer session showing final PID compensator at K=3 meeting all requirements" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/auv-pid-root-locus.jpg" data-caption="Root locus of the final PID-compensated system — closed-loop poles at -2.04, -1.521, -0.0506, and -0.2267 ± j0.5814, confirming stability with the tuned gain.">
+                      <img src="images/auv-pid-root-locus.jpg" alt="Root locus of the PID-compensated system with closed-loop pole locations marked" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/auv-pid-final-bode.jpg" data-caption="Bode plot of the final PID-compensated forward path: about 45° phase margin and 16dB gain margin, balancing the stability/performance tradeoff the uncompensated system's overly conservative margins didn't need to make.">
+                      <img src="images/auv-pid-final-bode.jpg" alt="Bode plot of the final PID-compensated forward-path transfer function" loading="lazy">
+                    </button>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="work-item">
+        <button class="work-row" data-kind="img" data-preview="images/cone-hsv-pipeline.jpg">
+          <span class="work-num">07</span>
+          <span class="work-name">Vision-Based Obstacle Detection</span>
+          <span class="work-tag">MATLAB · Computer Vision</span>
+          <span class="work-meta">HSV + Blob Analysis</span>
+          <span class="work-toggle">+</span>
+        </button>
+        <div class="work-detail-wrap">
+          <div class="work-detail-inner">
+            <div class="work-detail">
+              <div class="work-detail-media lightbox-trigger" data-caption="The full HSV thresholding pipeline: masked cone silhouette, the tuned hue/saturation/value ranges from the Color Thresholder app, and the resulting point cloud used to compute the centroid."><img src="images/cone-hsv-pipeline.jpg" alt="HSV color thresholding pipeline showing masked cone, H/S/V tuning ranges, and detected point cloud" loading="lazy"></div>
+              <div class="work-detail-copy">
+                <p>Built an HSV color-thresholding pipeline to detect traffic cones from a
+                mobile robot's camera feed, tuning hue/saturation/value ranges across a labeled
+                training set, then used connected-component analysis to filter noise and
+                extract each cone's centroid for downstream localization.</p>
+                <ul class="work-stats">
+                  <li>HSV thresholding tuned across a labeled training image set</li>
+                  <li>Connected-component filtering to reject background noise</li>
+                  <li>Centroid extraction feeding downstream localization</li>
+                  <li>5-person team project, ME 598 Introduction to Robotics</li>
+                </ul>
+                <div class="work-gallery">
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/cone-single-detection.jpg" data-caption="A single cone detected in the camera feed, converted to an angle and proximity estimate and plotted on the overhead robot-world view.">
+                      <img src="images/cone-single-detection.jpg" alt="Single cone detection with camera view and overhead robot-world plot" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/cone-two-detection.jpg" data-caption="Two cones detected in the same frame, each independently localized and placed on the overhead view at its correct relative angle and distance.">
+                      <img src="images/cone-two-detection.jpg" alt="Two-cone detection with camera view and overhead robot-world plot" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/cone-handheld-test.jpg" data-caption="Robustness test: a cone image displayed on a smartphone screen and captured live by the webcam, still correctly thresholded, centroided, and localized on the overhead view.">
+                      <img src="images/cone-handheld-test.jpg" alt="Smartphone-displayed cone image detected and localized, shown alongside its centroid mask and overhead view" loading="lazy">
+                    </button>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="work-item">
+        <button class="work-row" data-kind="img" data-preview="images/rrt-scatter-plot.jpg">
+          <span class="work-num">08</span>
+          <span class="work-name">RRT Path Planning Under Localization Uncertainty</span>
+          <span class="work-tag">MATLAB · RRT · Kalman Filter</span>
+          <span class="work-meta">100 trials · RRT + KF</span>
+          <span class="work-toggle">+</span>
+        </button>
+        <div class="work-detail-wrap">
+          <div class="work-detail-inner">
+            <div class="work-detail">
+              <div class="work-detail-media lightbox-trigger" data-caption="Path length vs. terminal localization uncertainty (trace of the error covariance matrix) across 100 RRT trials — the shortest and least-uncertain paths are marked separately, and barely overlap."><img src="images/rrt-scatter-plot.jpg" alt="Scatter plot of path length vs. terminal uncertainty across 100 RRT trials" loading="lazy"></div>
+              <div class="work-detail-copy">
+                <p>Built an RRT planner over a 2D obstacle field, then propagated a linear
+                Kalman filter along each planned path to predict the growth of localization
+                uncertainty — the robot only gets a position fix when a range beam has line of
+                sight to an obstacle edge, so uncertainty balloons in open space and shrinks near
+                walls. Across 100 randomized RRT trials, path length turned out to barely predict
+                final confidence: the shortest path found (length 102.0) ended among the
+                <em>least</em> confident outcomes (uncertainty 148.1, close to the trial-wide max
+                of 158.0), while a path only 10% longer (112.0) that stayed closer to obstacle
+                edges ended over 20x more confident (uncertainty 7.0) — showing that what a
+                robot can see along a route matters more than how far it travels.</p>
+                <ul class="work-stats">
+                  <li>100 RRT trials, each propagated through a linear Kalman filter</li>
+                  <li>Shortest path (102.0) landed near the worst-case uncertainty (148.1 of a 158.0 max)</li>
+                  <li>Min-uncertainty path (112.0, only 10% longer) reached 7.0 &mdash; over 20x more confident</li>
+                  <li>Uncertainty quantified as the trace of the terminal error covariance matrix P</li>
+                </ul>
+                <div class="work-gallery">
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/rrt-workspace-diagram.png" data-caption="The robot's workspace: a holonomic point robot translating in 2D, equipped with four perpendicular laser range beams of maximum range r, sensing obstacle edges in x and y.">
+                      <img src="images/rrt-workspace-diagram.png" alt="Diagram of the holonomic robot's workspace with four perpendicular range beams" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/rrt-shortest-path.jpg" data-caption="The shortest of the 100 RRT paths found (length 102.0). It cuts through open space between obstacles, so the robot rarely gets a position fix — terminal uncertainty is 148.1, nearly the worst of any trial.">
+                      <img src="images/rrt-shortest-path.jpg" alt="Shortest RRT path with position-uncertainty ellipses, length 102, uncertainty 148.1" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/rrt-min-uncertainty-path.jpg" data-caption="The most confident path found (length 112.0, uncertainty 7.0). It hugs a sequence of obstacle edges for most of its length, so the robot's range beams keep resolving its position and the covariance ellipses stay tight the whole way.">
+                      <img src="images/rrt-min-uncertainty-path.jpg" alt="Minimum-uncertainty RRT path with tight position-uncertainty ellipses, length 112, uncertainty 7.0" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/rrt-max-uncertainty-path.jpg" data-caption="The least confident path across all 100 trials (length 134.0, uncertainty 158.0) — long stretches with no obstacle in range let the covariance ellipses grow largely unchecked.">
+                      <img src="images/rrt-max-uncertainty-path.jpg" alt="Maximum-uncertainty RRT path with large position-uncertainty ellipses, length 134, uncertainty 158.0" loading="lazy">
+                    </button>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="work-item">
+        <button class="work-row" data-kind="img" data-preview="images/slam-comparison-plots.jpg">
+          <span class="work-num">09</span>
+          <span class="work-name">SLAM: Least Squares &amp; Kalman Filter Localization</span>
+          <span class="work-tag">MATLAB · Batch Least Squares · Kalman Filter</span>
+          <span class="work-meta">BLS + Kalman Filter</span>
+          <span class="work-toggle">+</span>
+        </button>
+        <div class="work-detail-wrap">
+          <div class="work-detail-inner">
+            <div class="work-detail">
+              <div class="work-detail-media lightbox-trigger" data-caption="Side-by-side comparison of odometry-only vs. landmark-fused position error, for both the batch least squares and Kalman filter estimators, each averaged over 1000 trials."><img src="images/slam-comparison-plots.jpg" alt="Comparison plots of batch least squares and Kalman filter position error, with and without landmarks" loading="lazy"></div>
+              <div class="work-detail-copy">
+                <p>Implemented and compared two discrete-time SLAM approaches — batch least
+                squares and a linear Kalman filter — for a mobile robot navigating a hallway by
+                odometry alone versus odometry fused with range measurements to three
+                point-landmark doors, averaged over 1000 trials each. Odometry-only position
+                error grew steadily to roughly 0.26m over a 100-second traversal for both
+                estimators; adding landmark measurements suppressed batch least squares' drift
+                only modestly (to ~0.21m), but nearly eliminated the Kalman filter's, dropping it
+                to ~0.005m at first landmark contact and holding it near the sensor noise floor
+                for the rest of the run.</p>
+                <ul class="work-stats">
+                  <li>Compared batch least squares vs. linear Kalman filter, 1000 trials each</li>
+                  <li>Odometry-only drift reached &asymp;0.26m over a 100s traversal</li>
+                  <li>Landmark fusion: least squares improved to &asymp;0.21m, Kalman filter to &asymp;0.005&ndash;0.02m</li>
+                  <li>Back-and-forth run confirms loop closures re-constrain the outbound trajectory, not just post-contact</li>
+                </ul>
+                <div class="work-gallery">
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/slam-workspace-diagram.png" data-caption="The robot's hallway workspace: it moves along a single degree of freedom past three point-landmark doors at l1, l2, l3, sensed by a bi-directional laser range beam of radius r, with wheel-encoder odometry as the other input.">
+                      <img src="images/slam-workspace-diagram.png" alt="Diagram of the robot's hallway workspace with three landmark doors and range-sensing radius" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/slam-bls-odometry-only.jpg" data-caption="Task 1 — batch least squares using odometry alone: error grows steadily as noisy wheel-encoder data lets the position estimate drift, reaching about 0.26m by the end of the 100s traversal.">
+                      <img src="images/slam-bls-odometry-only.jpg" alt="Batch least squares mean absolute error using odometry only, growing to 0.26m" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/slam-bls-with-landmarks.jpg" data-caption="Task 2 — batch least squares with landmarks added: error still grows between doors, but flattens each time a landmark comes into range, ending at about 0.21m instead of 0.26m.">
+                      <img src="images/slam-bls-with-landmarks.jpg" alt="Batch least squares mean absolute error with landmarks, showing plateau regions at each door" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/slam-kf-odometry-only.jpg" data-caption="Task 3 — Kalman filter using odometry alone: tracks the same growing error as the least-squares odometry-only case, with the filter's own predicted standard deviation (dashed) closely bounding it, confirming the filter is well tuned.">
+                      <img src="images/slam-kf-odometry-only.jpg" alt="Kalman filter mean absolute error and predicted standard deviation, odometry only" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/slam-kf-with-landmarks.jpg" data-caption="Task 4 — Kalman filter with landmarks: after an initial spike, first contact with a landmark near t=15s snaps the error down to about 0.005m, where it stays for the rest of the run — a far larger improvement than the least-squares case, since each correction propagates forward immediately.">
+                      <img src="images/slam-kf-with-landmarks.jpg" alt="Kalman filter mean absolute error with landmarks, dropping sharply after first landmark contact" loading="lazy">
+                    </button>
+                  </figure>
+                  <figure>
+                    <button class="lightbox-trigger" data-img="images/slam-bls-back-forth.jpg" data-caption="Task 5 — batch least squares on a back-and-forth run with landmarks: error rises on the outbound leg, peaks near the midpoint where the robot is farthest from any landmark, then falls again as it re-observes the same doors on the way back — the loop-closure effect.">
+                      <img src="images/slam-bls-back-forth.jpg" alt="Batch least squares mean absolute error over a back-and-forth traversal with landmark loop closures" loading="lazy">
+                    </button>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+</section>
+
+<section class="stmt-section alt-bg" id="experience">
+  <p class="index-kicker">03 / EXPERIENCE</p>
+  <h2 class="stmt">Where I've worked.</h2>
+
+  <div class="manifest">
+    <div class="manifest-row">
+      <span class="manifest-date">JUN 2023 &ndash; AUG 2023</span>
+      <div class="manifest-body">
+        <p class="manifest-role">Engineering Intern <span class="manifest-co">— McGoey, Hauser &amp; Edsall Consulting Engineers, D.P.C.</span></p>
+        <p class="manifest-desc">Produced engineering and site plans in AutoCAD for municipal and private infrastructure projects, including roadway drainage and structural renovation. Conducted field inspections to verify construction compliance and analyzed watermain material data for the Town of Port Jervis, NY.</p>
+      </div>
+      <span class="manifest-loc">Milford, PA</span>
+    </div>
+  </div>
+
+  <div class="other-exp">
+    <span class="exp-tag">SAE Baja</span>
+    <span class="exp-tag">Club Lacrosse — Vice President</span>
+    <span class="exp-tag">Engineers Without Borders</span>
+  </div>
+</section>
+
+<section class="cta-section" id="contact">
+  <p class="index-kicker">04 / CONTACT</p>
+  <h2 class="stmt-huge">Let's<br>build<br>something.<span class="cta-dot">.</span></h2>
+  <p class="content-lede">
+    Actively looking for full-time roles in robotics, controls, automation, or mechanical
+    design — CAD to controller.
+  </p>
+  <div class="contact-actions">
+    <a class="btn btn-primary" href="mailto:rbarbalich11@gmail.com">rbarbalich11@gmail.com</a>
+    <a class="btn btn-outline" href="https://www.linkedin.com/in/rowan-barbalich-70124926a/" target="_blank" rel="noopener">LinkedIn ↗</a>
+    <a class="btn btn-outline" href="resume.pdf" target="_blank" rel="noopener">Résumé ↗</a>
+  </div>
+</section>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
+  <button class="lightbox-prev" id="lightboxPrev" aria-label="Previous image">&larr;</button>
+  <button class="lightbox-next" id="lightboxNext" aria-label="Next image">&rarr;</button>
+  <div class="lightbox-frame">
+    <img id="lightboxImg" src="" alt="">
+  </div>
+  <p class="lightbox-caption" id="lightboxCaption"></p>
+  <p class="lightbox-counter" id="lightboxCounter"></p>
+</div>
+
+<footer class="site-footer">
+  <p>© 2026 Rowan Barbalich.</p>
+  <a href="#top">Back to top ↑</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+  // Lenis smooth scroll
+  const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+  function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+
+  // Custom cursor (desktop only) — replaces the native pointer entirely
+  const dot = document.getElementById('cursorDot');
+  const isDesktop = matchMedia('(hover: hover)').matches;
+  let rawMouseX = 0, rawMouseY = 0, hasMouse = false;
+  if (isDesktop) {
+    // Instant — no damping, no tween, no easing curve. This dot was the actual source of the
+    // "lag" complaints: it's what your eye tracks as "the cursor," and it was on a 0.35s
+    // power3.out ease (gsap.quickTo) this whole time, while the target line and the arm's own
+    // target were always reading the true, instantaneous mouse position underneath it. gsap.set
+    // (not .to/.quickTo) writes the position immediately, every mousemove, with zero animation.
+    // This is entirely separate from the arm's own joint dampers (Q1_MAX_RATE etc. further down)
+    // — nothing here touches those, the arm's deliberate "roll through resistance" motion is
+    // unchanged.
+    window.addEventListener('mousemove', (e) => {
+      gsap.set(dot, { x: e.clientX, y: e.clientY });
+      rawMouseX = e.clientX;
+      rawMouseY = e.clientY;
+      hasMouse = true;
+    });
+    document.querySelectorAll('a, button, .lightbox-trigger').forEach(el => {
+      el.addEventListener('mouseenter', () => gsap.to(dot, { scale: 1.12, duration: 0.25 }));
+      el.addEventListener('mouseleave', () => gsap.to(dot, { scale: 1, duration: 0.25 }));
+    });
+  } else {
+    dot.style.display = 'none';
+  }
+
+  // Headline reveal
+  gsap.to('.hero-kicker span', { y: 0, opacity: 1, duration: 0.01 });
+  gsap.set('.hero-kicker span', { opacity: 0 });
+  gsap.to('.hero-kicker span', { opacity: 1, duration: 0.6, delay: 0.1 });
+  gsap.to('.hero-title .line span', {
+    y: '0%',
+    duration: 0.9,
+    stagger: 0.08,
+    ease: 'power4.out',
+    delay: 0.15
+  });
+  gsap.from('.hero-sub', { opacity: 0, y: 20, duration: 0.8, delay: 0.7 });
+
+  // ---------- kinematic arm: real 2-link IK (law of cosines, same as Dobot lab) ----------
+  gsap.from('#schematic', { opacity: 0, scale: 0.94, duration: 0.9, delay: 0.5, ease: 'power2.out' });
+
+  const armSvg = document.getElementById('armSvg');
+  const BASE = { x: 70, y: 390 };
+  const L1 = 180; // upper arm (grey)
+  const L2 = 130; // forearm (grey)
+  const L3 = 50; // wrist / end-effector reach (orange) — matches the caption's L1/L2/L3 line exactly
+
+  // ---------- automation: rest pose when the cursor drops below the name/description divider ----------
+  // .hero-sub's own top border is "that faint grey line" — reusing it directly instead of a
+  // separate marker means this stays correct even if the page's layout shifts later.
+  const heroSubEl = document.querySelector('.hero-sub');
+  // Targets are given as the *displayed* degree readouts (what q1/q2/q3 show on screen), so they
+  // get converted back through the same -1 the display negation uses (dQ = -q) to get the raw
+  // math angles everything else here runs on.
+  const NEUTRAL_Q1 = -78 * Math.PI / 180;
+  const NEUTRAL_Q2 = -(-152) * Math.PI / 180;
+  const NEUTRAL_EE = NEUTRAL_Q1 + NEUTRAL_Q2 + (-99 * Math.PI / 180); // q3 = eeAngle - (q1+q2), so eeAngle = q1+q2+q3
+  // No blend/ease constant needed anymore for the transition into rest — the per-joint dampers
+  // further down are what turn "desired angle switches to the rest pose" into a gradual
+  // motion, the same way it smooths every other retarget.
+
+  const armEl = {
+    l1: document.getElementById('armL1'),
+    l2: document.getElementById('armL2'),
+    l3: document.getElementById('armL3'),
+    jointBase: document.getElementById('jointBase'),
+    jointElbow: document.getElementById('jointElbow'),
+    jointWrist: document.getElementById('jointWrist'),
+    gripBlob: document.getElementById('gripBlob'),
+    axBaseX: document.getElementById('axBaseX'),
+    axBaseY: document.getElementById('axBaseY'),
+    axElbowX: document.getElementById('axElbowX'),
+    axElbowY: document.getElementById('axElbowY'),
+    axWristX: document.getElementById('axWristX'),
+    axWristY: document.getElementById('axWristY'),
+    labelQ1: document.getElementById('labelQ1'),
+    labelQ2: document.getElementById('labelQ2'),
+    labelQ3: document.getElementById('labelQ3'),
+    labelQ1Reveal: document.getElementById('labelQ1Reveal'),
+    labelQ2Reveal: document.getElementById('labelQ2Reveal'),
+    labelQ3Reveal: document.getElementById('labelQ3Reveal'),
+    sectorQ1: document.getElementById('sectorQ1'),
+    sectorQ2: document.getElementById('sectorQ2'),
+    sectorQ3: document.getElementById('sectorQ3'),
+    jointsClipBase: document.getElementById('jointsClipBase'),
+    jointsClipElbow: document.getElementById('jointsClipElbow'),
+    jointsClipWrist: document.getElementById('jointsClipWrist'),
+    jointsClipL1: document.getElementById('jointsClipL1'),
+    jointsClipL2: document.getElementById('jointsClipL2'),
+    jointsClipL3: document.getElementById('jointsClipL3'),
+    targetLine: document.getElementById('targetLine'),
+    armSpecLive: document.getElementById('armSpecLive'),
+    // The R/D prefix lives in armSpecLive's own leading text node (armSpecLive.firstChild) so it
+    // can be rewritten without touching the tspan below it, which needs its own independent
+    // color and gets updated separately.
+    armStateText: document.getElementById('armStateText'),
+    jointDialBase: document.getElementById('jointDialBase'),
+    jointDialElbow: document.getElementById('jointDialElbow'),
+    jointDialWrist: document.getElementById('jointDialWrist')
+    // jointDialBaseNeedle/ElbowNeedle/WristNeedle get added below, once SVG_NS exists and the
+    // dials are actually built — see buildJointDial() further down.
+  };
+  // Live-readout text is throttled (not written every frame) — the numbers themselves are real
+  // and change every frame, but rewriting monospace text 60x/second reads as flicker, not "live."
+  // A slower, deliberate update cadence is what actually reads as "a calculation happening" to a
+  // human eye, the same way a lab instrument's digital readout updates a few times a second even
+  // though the underlying sensor samples much faster.
+  let lastReadoutUpdate = 0;
+  const READOUT_INTERVAL_MS = 120;
+
+  // Arm state colors — one of four, deliberately reusing hexes already in :root rather than
+  // inventing new ones, so each carries a meaning it already has elsewhere on the page:
+  //   CLEANUP      -> --accent (the arm's own primary color everywhere else: links, wedges,
+  //                    needles — "the arm itself is actively doing something")
+  //   IDLE         -> --paper-dim (the same muted grey already used for resting/inactive text)
+  //   IN REACH     -> --neon-green (already the cursor dot's color — "on target, all good")
+  //   OUT OF REACH -> --neon-yellow (already the star/letter hold-highlight color — "at a limit")
+  const ARM_STATE_COLORS = {
+    cleanup: '#ff4a1f',
+    idle: '#b9b6ac',
+    inReach: '#39ff14',
+    outOfReach: '#f4ff26'
+  };
+
+  // Target line: locked 1:1 to the raw target, no easing on the endpoint at all — tried a light
+  // exponential smoothing here first (to better match the custom cursor dot's own gsap easing),
+  // but any smoothing at all still reads as lag against the true mouse position, so the line now
+  // just goes exactly where the cursor is, every frame, full stop.
+  // Fades out once the cursor drops below the divider (the same moment the arm itself starts
+  // powering down to its neutral rest pose) instead of just vanishing — an eased opacity blend,
+  // same pattern as the grip blob's own size/color blending below, rather than a hard on/off.
+  let targetLineOpacityAmt = 1;
+  const TARGET_LINE_OPACITY_EASE = 0.15;
+  const TARGET_LINE_MAX_OPACITY = 0.4; // matches the .target-line CSS opacity it replaces
+  const AXIS_LEN = 22;
+  const AXIS_LEN_WRIST = 18;
+  const SECTOR_LEN = AXIS_LEN * 1.35;             // slices are 35% larger than the axis arrows, independently
+  const SECTOR_LEN_WRIST = AXIS_LEN_WRIST * 1.35;
+
+  // X is drawn straight from the real angle (see the big comment above where this is called) so
+  // it visually sits on the real link. Y, though, is NOT just "angle + 90°" in raw screen math —
+  // that's 90° CLOCKWISE as a viewer actually perceives it, because raw angles increase clockwise
+  // on screen (SVG's y-axis points down). The standard robotics-course convention (confirmed via
+  // the same research that caught this: Craig/Spong, DH frame assignment) is a right-handed
+  // frame — Y sits 90° COUNTERCLOCKWISE from X, X-cross-Y giving +Z out of the page toward the
+  // viewer. So Y here is angle MINUS 90°: the one deliberate case in this file where a frame's
+  // two axes aren't both just "the raw angle" — X matches the real geometry, Y is corrected to
+  // look right-handed to a viewer, and the two would only be the same rotation if we lived in a
+  // mirror.
+  function setAxis(xLine, yLine, ox, oy, angle, len) {
+    xLine.setAttribute('x1', ox); xLine.setAttribute('y1', oy);
+    xLine.setAttribute('x2', ox + len * Math.cos(angle));
+    xLine.setAttribute('y2', oy + len * Math.sin(angle));
+    yLine.setAttribute('x1', ox); yLine.setAttribute('y1', oy);
+    yLine.setAttribute('x2', ox + len * Math.cos(angle - Math.PI / 2));
+    yLine.setAttribute('y2', oy + len * Math.sin(angle - Math.PI / 2));
+  }
+
+  function normalizeAngle(a) {
+    while (a > Math.PI) a -= Math.PI * 2;
+    while (a < -Math.PI) a += Math.PI * 2;
+    return a;
+  }
+
+  // Thin "pizza slice" outline: two radii out to angleStart/angleEnd, joined by an arc. Callers
+  // always pass RAW angles here (q1, q1+q2, eeAngle — the same ones the real links are drawn
+  // from), never the negated display values — see the big comment where this gets called, in
+  // updateArm(), for why that distinction matters. This keeps the wedge's edges geometrically
+  // coincident with the actual incoming/outgoing links, not a mirror image of them.
+  // The wedge itself is always drawn whole now — no gap, no split, no per-frame resizing. The
+  // degree-value label goes at the angle exactly opposite the wedge's midpoint (mid + 180°) instead
+  // of sitting on the arc: that point is, by construction, always the single farthest spot on the
+  // circle from the wedge, so it can never land inside the wedge regardless of how wide or narrow
+  // the angle is — no special-casing needed for small angles the way the gap version required.
+  function sectorPath(cx, cy, r, angleStart, angleEnd) {
+    let delta = angleEnd - angleStart;
+    delta = ((delta + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; // normalize to (-PI, PI]
+    const end = angleStart + delta;
+    const mid = angleStart + delta / 2;
+    const sweep = delta > 0 ? 1 : 0;
+    const largeArc = Math.abs(delta) > Math.PI ? 1 : 0;
+    const pt = (a, radius) => ({ x: cx + radius * Math.cos(a), y: cy + radius * Math.sin(a) });
+    const p1 = pt(angleStart, r), p2 = pt(end, r);
+    const d = `M ${cx} ${cy} L ${p1.x} ${p1.y} A ${r} ${r} 0 ${largeArc} ${sweep} ${p2.x} ${p2.y} Z`;
+    const label = pt(mid + Math.PI, r); // opposite side, same distance from the joint as the arc itself
+    return { d, labelX: label.x, labelY: label.y };
+  }
+  const toDeg = (rad) => Math.round(rad * 180 / Math.PI);
+
+  // Thin rectangle running from (x1,y1) to (x2,y2), halfWidth wide on each side — the clip-path
+  // stand-in for a stroked line (a plain <line> has zero fill area, so it can't clip anything).
+  function segmentRectPoints(x1, y1, x2, y2, halfWidth) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy) || 0.0001;
+    const px = (-dy / len) * halfWidth, py = (dx / len) * halfWidth;
+    return `${x1 + px},${y1 + py} ${x2 + px},${y2 + py} ${x2 - px},${y2 - py} ${x1 - px},${y1 - py}`;
+  }
+
+  // classic elbow-manipulator solution: law of cosines for the elbow angle,
+  // then shoulder angle backs out the offset — same derivation as the Dobot lab.
+  // now also returns q1/q2 directly so we can display live angle readouts.
+  function solveIK(bx, by, l1, l2, tx, ty, elbowSign) {
+    const dx = tx - bx, dy = ty - by;
+    const rawR = Math.hypot(dx, dy);
+    const maxR = l1 + l2;        // true full extension — D clamp below handles the float edge case
+    const minR = Math.abs(l1 - l2);
+    const r = Math.min(Math.max(rawR, minR), maxR);
+
+    const angleToTarget = Math.atan2(dy, dx);
+    const D = Math.min(1, Math.max(-1, (r * r - l1 * l1 - l2 * l2) / (2 * l1 * l2)));
+    const q2 = elbowSign * Math.atan2(Math.sqrt(1 - D * D), D);
+    const q1 = angleToTarget - Math.atan2(l2 * Math.sin(q2), l1 + l2 * Math.cos(q2));
+
+    const elbow = { x: bx + l1 * Math.cos(q1), y: by + l1 * Math.sin(q1) };
+    const wrist = { x: elbow.x + l2 * Math.cos(q1 + q2), y: elbow.y + l2 * Math.sin(q1 + q2) };
+    // rawR/minR/maxR/D returned too — not used by any existing caller, but they're the actual
+    // law-of-cosines intermediates (rawR = raw requested distance before clamping, D = the
+    // cosine term the elbow angle is solved from) and the live readout below reads them straight
+    // off this return value instead of recomputing a shadow copy of this same math a second time.
+    return { elbow, wrist, q1, q2, rawR, minR, maxR, D };
+  }
+
+  function viewboxTransform(svgEl, vbW, vbH, mode, vAlign) {
+    // vAlign defaults to 'mid' (matches preserveAspectRatio="xMid**Mid**") — pass 'min' for any
+    // svg using xMid**Min**, otherwise this computes an offsetY that assumes a vertical-centering
+    // letterbox gap the browser never actually draws, and every hit-test/drag built on it drifts
+    // off from what's really on screen (exactly what broke star dragging after starSvg switched
+    // to xMidYMin: the browser rendered top-aligned, this function still assumed centered).
+    const rect = svgEl.getBoundingClientRect();
+    const scale = mode === 'slice'
+      ? Math.max(rect.width / vbW, rect.height / vbH)
+      : Math.min(rect.width / vbW, rect.height / vbH);
+    return {
+      scale,
+      offsetX: rect.left + (rect.width - vbW * scale) / 2,
+      offsetY: vAlign === 'min' ? rect.top : rect.top + (rect.height - vbH * scale) / 2
+    };
+  }
+  const localToScreen = (t, lx, ly) => ({ x: t.offsetX + lx * t.scale, y: t.offsetY + ly * t.scale });
+  const screenToLocal = (t, sx, sy) => ({ x: (sx - t.offsetX) / t.scale, y: (sy - t.offsetY) / t.scale });
+
+  function lerpColor(hexA, hexB, amt) {
+    const a = parseInt(hexA.slice(1), 16), b = parseInt(hexB.slice(1), 16);
+    const ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255;
+    const br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+    return `rgb(${Math.round(ar + (br - ar) * amt)}, ${Math.round(ag + (bg - ag) * amt)}, ${Math.round(ab + (bb - ab) * amt)})`;
+  }
+
+  // gripper: closes on click/tap-and-hold anywhere on the page, opens on release
+  let isGripping = false;
+  window.addEventListener('pointerdown', () => { isGripping = true; });
+  window.addEventListener('pointerup', () => { isGripping = false; });
+  window.addEventListener('blur', () => { isGripping = false; });
+
+  // Stop the browser's own native drag-and-drop from ever starting — without this, a click-drag
+  // over the name (or a letter clone) can be interpreted as "drag this content" instead of "grip
+  // this," which shows the browser's own translucent drag-ghost of the text following the cursor
+  // AND, worse, hijacks the pointer event sequence so the matching pointerup here never fires —
+  // isGripping (and whatever it's holding) gets stuck on permanently. user-select:none alone
+  // doesn't reliably stop this in every browser (Safari especially), so this is the real fix, plus
+  // a dragend fallback that force-releases everything in case a native drag ever slips through
+  // anyway — belt and suspenders, since this can't be tested in a live browser from here.
+  window.addEventListener('dragstart', (e) => e.preventDefault());
+  window.addEventListener('dragend', () => {
+    isGripping = false;
+    autoGripping = false;
+    heldStar = null;
+    heldLetter = null;
+  });
+
+  // the blob: rigid now, not a spring body — its position is just the tip of the (rate-limited,
+  // see below) end-effector segment every frame. blobX/blobY are still persistent outer-scope
+  // state, not because they carry velocity anymore, but because automation's arrival checks need
+  // "where the blob was as of last frame" before this frame's own update has run yet.
+  const starSvg = document.getElementById('starSvg');
+  let blobX = BASE.x, blobY = BASE.y;
+  let blobRadius = 8, blobColorAmt = 0;
+  const COLOR_LIGHT = '#ffb385', COLOR_BASE = '#ff4a1f';
+
+  // Blob size is now derived, not a fixed number: "about half a mm larger than the largest star."
+  // Stars are sized in the starfield SVG's own local units (baseSize 9-15, radius = baseSize/2 —
+  // see the stars.map() below), the blob lives in the arm SVG's separate local units, and both
+  // SVGs get scaled independently to fit their own on-screen box — so the only place these two
+  // sizes are actually comparable is real screen pixels. BLOB_R/BLOB_R_GRIP are recomputed every
+  // frame from the current armT/starT scale factors (a handful of multiplications, not expensive)
+  // rather than hardcoded, so the relationship holds even if the layout/viewport changes.
+  const MAX_STAR_RADIUS_LOCAL = 15 * 0.5; // matches stars' baseSize upper bound (9 + Math.random()*6 -> max 15)
+  const HALF_MM_PX = (96 / 25.4) / 2; // ~1.89px — "half a mm" approximated at a standard 96dpi CSS pixel; the
+                                       // web has no reliable way to read true physical screen density, so this
+                                       // is a reasonable, not exact, stand-in for a physical half-millimeter.
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  // 8 small satellite spheres orbiting the main end-effector — built the same way q3's own
+  // ring-of-dots is (see buildDotRing below): fixed positions on a unit circle, one single group
+  // transform per frame does translate + rotate + scale. Rotation is driven by -eeAngle, the exact
+  // same counter-rotation q3's dot ring uses (same rate, opposite direction to the end-effector
+  // segment's own live angle) — not an independent clock. "scale" is new here (q3's own ring
+  // doesn't need it, its radius is fixed) since our orbit radius has to track the live blob size
+  // and the emerge-from-center animation; folding that into the same transform keeps it to one
+  // attribute write, same as q3's. They only exist visually while gripping/carrying (isGripping ||
+  // autoGripping) — emergeAmt eases 0->1 on grip and back down on release, and because it's part
+  // of the same scale factor, it collapses both their spread AND their own size to zero at the
+  // center on release, not just a fade.
+  const orbitSpheresEl = document.getElementById('orbitSpheres');
+  const ORBIT_COUNT = 8;
+  const ORBIT_RADIUS_FACTOR = 1.6; // orbit path radius = blobRadius * this, at full emergence (brought in closer)
+  const ORBIT_SPHERE_FACTOR = 0.14; // each satellite's own radius = blobRadius * this (half the previous 0.28)
+  const EMERGE_RISE = 0.16, EMERGE_FALL = 0.1;
+  let emergeAmt = 0;
+  for (let i = 0; i < ORBIT_COUNT; i++) {
+    const a = (i / ORBIT_COUNT) * Math.PI * 2;
+    const c = document.createElementNS(SVG_NS, 'circle');
+    c.setAttribute('class', 'orbit-sphere');
+    c.setAttribute('cx', Math.cos(a).toFixed(4));
+    c.setAttribute('cy', Math.sin(a).toFixed(4));
+    c.setAttribute('r', (ORBIT_SPHERE_FACTOR / ORBIT_RADIUS_FACTOR).toFixed(4)); // unit-space radius; scale below brings it to the real size
+    orbitSpheresEl.appendChild(c);
+  }
+
+  // stars: live in a separate full-hero SVG with its own viewBox, so grabbing them means
+  // converting between the arm's coordinate space and the starfield's via screen pixels.
+  const starReveal = document.getElementById('starReveal');
+  const heldStarReveal = document.getElementById('heldStarReveal');
+  const blobClipShape = document.getElementById('blobClipShape');
+
+  // Plain ring (a real <circle>, no tick texture anymore) + needle, into the given empty <g>.
+  // Returns the needle — the one child that moves every frame, rotating on top of whatever
+  // translate the parent group gets (see updateArm()). Used for q1 (base) and q2 (elbow), the two
+  // genuinely actuated joints.
+  function buildJointDial(groupEl, ringRadius) {
+    const ring = document.createElementNS(SVG_NS, 'circle');
+    ring.setAttribute('class', 'joint-ring');
+    ring.setAttribute('r', ringRadius);
+    groupEl.appendChild(ring);
+    return addNeedle(groupEl, ringRadius);
+  }
+  function addNeedle(groupEl, ringRadius) {
+    const needle = document.createElementNS(SVG_NS, 'line');
+    needle.setAttribute('class', 'joint-needle');
+    needle.setAttribute('x1', '0'); needle.setAttribute('y1', '0');
+    needle.setAttribute('x2', (ringRadius - 1.5).toFixed(2)); needle.setAttribute('y2', '0');
+    groupEl.appendChild(needle);
+    return needle;
+  }
+  // q3 (wrist) gets a different treatment from q1/q2: instead of a ring, a ring of DOTS — living
+  // in their own sub-<g> so they can spin independently of the parent group's translate. That
+  // sub-group gets its own rotate every frame in updateArm(), driven by -eeAngle (the negative of
+  // what the needle and the orange EE segment itself rotate by) — same rate, opposite direction,
+  // a small counter-rotating "gear" against the segment's own live motion. Still marked visually
+  // distinct from the actuated joints (q3 is derived, not independently actuated), just via dots
+  // instead of the dashed-ring treatment this used to be.
+  function buildDotRing(parentG, ringRadius, dotCount, dotRadius) {
+    const ringGroup = document.createElementNS(SVG_NS, 'g');
+    ringGroup.setAttribute('class', 'joint-dot-ring');
+    for (let i = 0; i < dotCount; i++) {
+      const a = (i / dotCount) * Math.PI * 2;
+      const dot = document.createElementNS(SVG_NS, 'circle');
+      dot.setAttribute('class', 'joint-ring-dot');
+      dot.setAttribute('cx', (Math.cos(a) * ringRadius).toFixed(2));
+      dot.setAttribute('cy', (Math.sin(a) * ringRadius).toFixed(2));
+      dot.setAttribute('r', dotRadius);
+      ringGroup.appendChild(dot);
+    }
+    parentG.appendChild(ringGroup);
+    return ringGroup;
+  }
+  // Base largest, elbow next, wrist smallest — matches the mass/inertia hierarchy already built
+  // into the joint dampers (Q1 slowest/heaviest down to EE quickest/lightest).
+  armEl.jointDialBaseNeedle = buildJointDial(armEl.jointDialBase, 9.5);
+  armEl.jointDialElbowNeedle = buildJointDial(armEl.jointDialElbow, 8.5);
+  armEl.jointDialWristRing = buildDotRing(armEl.jointDialWrist, 6.5, 10, 0.9);
+  armEl.jointDialWristNeedle = addNeedle(armEl.jointDialWrist, 6.5);
+
+  const stars = Array.from(document.querySelectorAll('#starSvg .hero-star')).map(el => {
+    const revealEl = document.createElementNS(SVG_NS, 'text');
+    revealEl.setAttribute('class', 'star-reveal');
+    revealEl.textContent = '*';
+    starReveal.appendChild(revealEl);
+    return {
+      el,
+      revealEl,
+      x: +el.getAttribute('x'),
+      y: +el.getAttribute('y'),
+      baseSize: 9 + Math.random() * 6, // 9-15pt — a real range now (was a near-flat 11-13)
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.3 + Math.random() * 0.4
+    };
+  });
+  stars.forEach(s => s.el.setAttribute('font-size', s.baseSize));
+
+  // Push the whole field down so nothing sits closer than 1in to the top of .hero (now the same
+  // edge the nav sits on, since starSvg went xMidYMin — see the comment up in the markup). One
+  // shared shift applied to every star's y, computed from the real live scale at load, keeps all
+  // the existing spacing between stars intact instead of clamping each one individually (which
+  // would bunch the low-y ones together at a shared floor and ruin the spread). Baked into s.y
+  // itself, once, right here — not reapplied per frame — so every downstream read of s.y (hit
+  // test, drag, render) automatically stays in sync with no special-casing, the same lesson from
+  // the drag-offset bug just above.
+  const starT0 = viewboxTransform(starSvg, 1000, 600, 'meet', 'min');
+  const TOP_MARGIN_PX = 96; // 1in at the CSS-standard 96px/in
+  const topMarginLocal = TOP_MARGIN_PX / starT0.scale;
+  stars.forEach(s => { s.y += topMarginLocal; });
+  // Home position for the return-to-place automation below — captured once, after the margin
+  // shift above, since that shift (not the raw markup coordinate) is each star's real resting spot.
+  stars.forEach(s => { s.homeX = s.x; s.homeY = s.y; });
+
+  gsap.from('.hero-star', { scale: 0, transformOrigin: 'center', stagger: 0.05, delay: 1.0, duration: 0.4, ease: 'back.out(2)' });
+
+  // grabbable pieces (n, h, and just the dot of the i): live as absolutely-positioned clones
+  // in #letterLayer (a sibling of .hero-title, not a child of it — see the CSS/HTML comments
+  // for why), each mirroring a hidden "source" glyph still in the flow so the word's spacing
+  // never shifts. No entrance flourish on these — they should just be sitting there, correctly
+  // placed, from the very first frame, so finding out they move is something the user discovers
+  // rather than something the page announces.
+  const heroEl = document.querySelector('.hero');
+  const letterLayer = document.getElementById('letterLayer');
+
+  function measureIgnoringTransform(el) {
+    // The real letters still carry the intro animation's translateY(110%) → 0% transform — and
+    // so does their word-level wrapper span, since ".hero-title .line span" matches BOTH the
+    // outer word span and the nested letter spans inside it. Neutralizing only the letter's own
+    // transform still left the parent's ~full-line-height offset baked into the measurement,
+    // which is why things landed a whole line below where they belonged. Walk the whole chain
+    // up to (not including) .hero-title and neutralize every transform in it. They're all
+    // invisible anyway (visibility: hidden), so this is safe.
+    const chain = [];
+    let node = el;
+    while (node && node.classList && !node.classList.contains('hero-title')) {
+      chain.push(node);
+      node = node.parentElement;
+    }
+    const prevTransforms = chain.map(n => n.style.transform);
+    chain.forEach(n => { n.style.transform = 'none'; });
+    const rect = el.getBoundingClientRect();
+    chain.forEach((n, i) => { n.style.transform = prevTransforms[i]; });
+    return rect;
+  }
+
+  const letters = Array.from(document.querySelectorAll('.hero-title .grab-letter')).map(sourceEl => {
+    // Each letter gets its own clip box matching its own text line — same concealment the real
+    // letters get from .line's overflow: hidden, since this clone lives outside .hero-title and
+    // can't inherit that clipping directly.
+    const clip = document.createElement('div');
+    clip.className = 'letter-clip';
+    letterLayer.appendChild(clip);
+
+    const clone = document.createElement('span');
+    clone.className = 'letter-clone';
+    clone.textContent = sourceEl.textContent;
+    // The yellow "reveal" twin, painted right after (= on top of) the base clone — same idea
+    // as the star reveal system, just implemented with a CSS clip-path circle instead of an
+    // SVG clipPath, since these are plain HTML letters rather than SVG text.
+    const reveal = document.createElement('span');
+    reveal.className = 'letter-clone letter-reveal';
+    reveal.textContent = sourceEl.textContent;
+    clip.appendChild(clone);
+    clip.appendChild(reveal);
+
+    return {
+      sourceEl, lineEl: sourceEl.closest('.line'), clip, el: clone, revealEl: reveal,
+      cx: 0, cy: 0, halfW: 10, halfH: 10, containerOffsetX: 0, containerOffsetY: 0, moved: false,
+      homeX: null, homeY: null // filled in by placeRestingLetters below — the automation's "put it back" target
+    };
+  });
+
+  function setLetterPos(l, left, top) {
+    const x = left - l.containerOffsetX, y = top - l.containerOffsetY;
+    l.el.style.left = x + 'px';
+    l.el.style.top = y + 'px';
+    l.revealEl.style.left = x + 'px';
+    l.revealEl.style.top = y + 'px';
+  }
+
+  function placeRestingLetters() {
+    const heroRect = heroEl.getBoundingClientRect();
+    letters.forEach(l => {
+      // .line itself carries no transform (only its span children do), so this is stable —
+      // keep the clip box in sync with it regardless of when/how often this runs.
+      const lineRect = l.lineEl.getBoundingClientRect();
+      l.containerOffsetX = lineRect.left - heroRect.left;
+      l.containerOffsetY = lineRect.top - heroRect.top;
+      l.clip.style.left = l.containerOffsetX + 'px';
+      l.clip.style.top = l.containerOffsetY + 'px';
+      l.clip.style.width = lineRect.width + 'px';
+      l.clip.style.height = lineRect.height + 'px';
+
+      if (l.moved) return; // never snap back something that's already been dragged
+      const r = measureIgnoringTransform(l.sourceEl);
+      const style = getComputedStyle(l.sourceEl);
+      [l.el, l.revealEl].forEach(el => {
+        el.style.fontFamily = style.fontFamily;
+        el.style.fontSize = style.fontSize;
+        el.style.fontWeight = style.fontWeight;
+        el.style.lineHeight = style.lineHeight;
+        el.style.letterSpacing = style.letterSpacing;
+      });
+      l.el.style.color = style.color;
+      l.halfW = r.width / 2;
+      l.halfH = r.height / 2;
+      l.cx = (r.left - heroRect.left) + l.halfW;
+      l.cy = (r.top - heroRect.top) + l.halfH;
+      l.homeX = l.cx; l.homeY = l.cy; // kept in sync on every resize, right up until the first time it's dragged
+      setLetterPos(l, l.cx - l.halfW, l.cy - l.halfH);
+    });
+  }
+  placeRestingLetters();
+  // Re-measure once webfonts actually land (the very first pass may have measured fallback-font
+  // metrics) and again on resize — only affects pieces that haven't been picked up yet.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeRestingLetters);
+  window.addEventListener('resize', placeRestingLetters);
+
+  // Rounded-corner polygon path: pull each vertex in along both its adjacent edges by
+  // `radius`, then join those pairs with a quadratic curve through the original vertex —
+  // a standard way to fillet a polygon's corners without needing true arc math.
+  function roundedPolygonPath(pts, radius) {
+    const n = pts.length;
+    let d = '';
+    for (let i = 0; i < n; i++) {
+      const prev = pts[(i - 1 + n) % n], curr = pts[i], next = pts[(i + 1) % n];
+      const toPrev = { x: prev.x - curr.x, y: prev.y - curr.y };
+      const toNext = { x: next.x - curr.x, y: next.y - curr.y };
+      const lenPrev = Math.hypot(toPrev.x, toPrev.y), lenNext = Math.hypot(toNext.x, toNext.y);
+      const t = Math.min(radius, lenPrev / 2, lenNext / 2);
+      const p1 = { x: curr.x + (toPrev.x / lenPrev) * t, y: curr.y + (toPrev.y / lenPrev) * t };
+      const p2 = { x: curr.x + (toNext.x / lenNext) * t, y: curr.y + (toNext.y / lenNext) * t };
+      d += (i === 0 ? `M ${p1.x} ${p1.y} ` : `L ${p1.x} ${p1.y} `) + `Q ${curr.x} ${curr.y} ${p2.x} ${p2.y} `;
+    }
+    return d + 'Z';
+  }
+
+  // Base triangle: equilateral now, not free-height. The old version fixed the half-width at
+  // 22.75 but derived height from wherever the measured "h" baseline happened to land relative to
+  // the pivot joint (390) — those two numbers had no required relationship, so it could (and did)
+  // come out acute and tall instead of the intended obtuse/even shape. Equilateral removes that
+  // degree of freedom entirely: side length = the base you already liked (2 × 22.75 = 45.5), and
+  // height is locked to that by the fixed sqrt(3)/2 ratio, so it's geometrically guaranteed to be
+  // the same shape on every load regardless of layout.
+  // Base edge (not the apex) is what's pinned to the "h" baseline every frame inside updateArm()
+  // (below), reusing that frame's already-computed armT rather than a separate one-off snapshot —
+  // the apex then falls wherever the fixed height puts it above that line, which means it may not
+  // land exactly on the pivot joint's own dot (390) if the real layout gap to the name differs
+  // from the triangle's height. Flagging that trade-off since it can't be checked without seeing
+  // it live: if the apex looks visibly detached from the joint, the fix is to relax which one
+  // (joint or name line) the triangle is pinned to.
+  const armBaseEl = document.getElementById('armBase');
+  const armBaseSourceEl = letters[0].sourceEl; // "h" — no descender, so its bottom is the true baseline
+  const ARM_BASE_HALF_WIDTH = 22.75;
+  const ARM_BASE_SIDE = ARM_BASE_HALF_WIDTH * 2;
+  const ARM_BASE_HEIGHT = ARM_BASE_SIDE * Math.sqrt(3) / 2; // equilateral triangle height from side length
+  const ARM_BASE_FILLET = 5;
+  const ARM_BASE_Y_NUDGE = 12; // manual correction: the measured "h" bottom landed slightly below the drawn line, per feedback — small fixed nudge up rather than a fourth blind measurement change
+  // .arm-link's stroke-width is 2.5, centered on the path — so the base's *interior* edge (the
+  // one closer to the apex) sits half a stroke-width above armBaseY, and the *exterior* edge
+  // (the one facing away from the triangle, which is the one that should sit on the line) sits
+  // half a stroke-width below it. Per feedback the interior edge was the one landing on the
+  // line, so the path itself needs to move up a full stroke-width (not just half) for the
+  // exterior edge to take its place on that same line.
+  const ARM_BASE_STROKE_WIDTH = 2.5;
+  const ARM_BASE_Y_TOTAL_NUDGE = ARM_BASE_Y_NUDGE + ARM_BASE_STROKE_WIDTH;
+
+  // Rise in together with the rest of the name. This has to be its own tween (rather than just
+  // adding ".letter-clone" to the main headline reveal call above) because the clones don't
+  // exist yet at the point that call runs — but same duration/ease, and a delay lined up with
+  // where the hidden "h" naturally falls in the main reveal's stagger sequence (it's the 3rd of
+  // 4 elements there: the two line-wrappers, "h", then the accent-word dot). Once it's done,
+  // open up each clip box so dragging later isn't clipped by a box the letter has since left.
+  gsap.to('.letter-clone', {
+    y: '0%',
+    duration: 0.9,
+    stagger: 0.08,
+    ease: 'power4.out',
+    delay: 0.15 + 2 * 0.08,
+    onComplete: () => letters.forEach(l => { l.clip.style.overflow = 'visible'; })
+  });
+
+  let heldStar = null, heldLetter = null;
+
+  // ---------- joint dampers: hard-capped angular speed, no springs, no jiggle ----------
+  // Every joint (q1, q2, and the end-effector's own heading) is real, persistent state now — not
+  // re-derived fresh from a smoothed cursor position each frame. Each frame computes what the
+  // angle *would* instantly be if the arm had zero inertia (the "desired" values below), then
+  // this mechanism moves the actual angle toward that by at most a per-joint max radians — a hard
+  // clamp, not a spring, so there's still no overshoot and no way for a sudden retarget (cursor
+  // jump, grip, release, snapping to rest) to move it any faster than its own cap allows.
+  //
+  // Two refinements on top of a flat rate, aimed at "alive" over "robotic":
+  // 1. Each joint gets its OWN max rate instead of sharing one — q1 (swinging the whole upper
+  //    arm, the "heaviest" link) is slowest, q2 a bit quicker, the end-effector heading quickest
+  //    of all. Real arms don't move every joint at identical speed; this alone breaks the
+  //    lockstep, all-joints-in-unison feeling.
+  // 2. DECEL_WINDOW: within that many radians of arrival, a joint's max step for the frame scales
+  //    down proportionally to how close it is, instead of cutting off at full speed and hitting a
+  //    hard stop. Still a hard cap (still zero overshoot) — it just tapers into place rather than
+  //    slamming into it.
+  // Two speed sets, not one: the idle cleanup automation (seeking/carrying a misplaced object)
+  // keeps its original, more deliberate pace, while active user control (tracking the cursor,
+  // and the neutral-rest transition) runs 75% faster — same relative shoulder/elbow/end-effector
+  // spread in both, just scaled.
+  const Q1_MAX_RATE_CLEANUP = 0.013; // shoulder — slowest, biggest mass to swing
+  const Q2_MAX_RATE_CLEANUP = 0.018; // elbow — middle
+  const EE_MAX_RATE_CLEANUP = 0.029; // end-effector heading — quickest, lightest
+  const ACTIVE_SPEED_MULT = 1.75;
+  const Q1_MAX_RATE_ACTIVE = Q1_MAX_RATE_CLEANUP * ACTIVE_SPEED_MULT;
+  const Q2_MAX_RATE_ACTIVE = Q2_MAX_RATE_CLEANUP * ACTIVE_SPEED_MULT;
+  const EE_MAX_RATE_ACTIVE = EE_MAX_RATE_CLEANUP * ACTIVE_SPEED_MULT;
+  const DECEL_WINDOW = 0.35; // radians (~20°) — ease-out zone approaching any target, shared by both speed sets
+  function rateLimitAngle(current, desired, maxStep, decelWindow) {
+    const delta = normalizeAngle(desired - current);
+    const dist = Math.abs(delta);
+    if (dist < 1e-4) return desired; // snap the last imperceptible hair instead of crawling toward it forever
+    const eased = dist < decelWindow ? maxStep * (dist / decelWindow) : maxStep;
+    return current + Math.max(-eased, Math.min(eased, delta));
+  }
+  // Seeded once from the arm's original resting-idle point (BASE.x+160, BASE.y-140) so the very
+  // first frame doesn't have to roll all the way from some arbitrary zero angle.
+  const seedToX = 160, seedToY = -140;
+  const seedDist = Math.hypot(seedToX, seedToY) || 0.0001;
+  const seedDirX = seedToX / seedDist, seedDirY = seedToY / seedDist;
+  const seedIK = solveIK(BASE.x, BASE.y, L1, L2, BASE.x + seedToX - L3 * seedDirX, BASE.y + seedToY - L3 * seedDirY, 1);
+  let actualQ1 = seedIK.q1, actualQ2 = seedIK.q2, actualEE = Math.atan2(seedDirY, seedDirX);
+
+  // ---------- elbow-flip: the arm actually has two valid IK solutions per target ----------
+  // solveIK's elbowSign parameter has been sitting there unused since it was written — every call
+  // site hardcoded 1, so only one of the two law-of-cosines branches (elbow bent one way vs. its
+  // mirror image bent the other way) ever got used. That multiplicity — one end-effector position,
+  // two distinct valid joint configurations — is the textbook fact that separates inverse
+  // kinematics from forward kinematics, so actually surfacing it is worth more than any label.
+  //
+  // Every frame both branches get solved, and normally the one closer (in joint-angle terms) to
+  // the arm's current actual pose wins — the same continuity-preserving rule a real controller
+  // uses, so it only flips when the target's geometry genuinely forces it to (rare in ordinary
+  // cursor movement — passing behind the base, roughly). Since that's too rare to ever be seen by
+  // a casual visitor, it's paired with a second, deliberate trigger: only while idle-wandering
+  // (no cursor, autoState idle), on a loose timer, the FAR branch gets chosen on purpose for one
+  // frame — the joint dampers then carry it there as a visible, smooth reconfiguration, not a
+  // snap, and continuity naturally keeps it there afterward until the next scheduled flip.
+  let elbowFlipNextAt = 4 + Math.random() * 2; // first demo flip 4-6s in, so it's not the very first thing seen
+  const ELBOW_FLIP_MIN_GAP = 6, ELBOW_FLIP_MAX_GAP = 10; // seconds between idle-wander demo flips
+
+  // ---------- automation: return-to-place cleanup, runs while resting below the divider ----------
+  // Same "below the line" trigger as the rest pose above, but with a job to do first: if anything
+  // has been dragged out of place, the arm works through those one at a time — nearest to the
+  // end-effector first — before it's allowed to actually rest. Deliberately reuses heldStar/
+  // heldLetter (the same variables the real drag uses) so every bit of existing polish — the
+  // white-to-yellow reveal, the grip-blob squeeze, the snap-to-center/offset-preserving carry
+  // behavior — comes along for free instead of needing its own parallel version.
+  let autoState = 'idle'; // 'idle' | 'seeking' | 'carrying'
+  let autoTargetType = null; // 'star' | 'letter'
+  let autoTargetRef = null;
+  let autoGripping = false;
+  const AUTO_HOME_EPS_STAR = 4;   // local starfield units — real drags move things far more than this
+  const AUTO_HOME_EPS_LETTER = 4; // hero-relative px
+
+  function findMisplacedObjects() {
+    const out = [];
+    stars.forEach(s => { if (Math.hypot(s.x - s.homeX, s.y - s.homeY) > AUTO_HOME_EPS_STAR) out.push({ type: 'star', ref: s }); });
+    letters.forEach(l => { if (l.homeX !== null && Math.hypot(l.cx - l.homeX, l.cy - l.homeY) > AUTO_HOME_EPS_LETTER) out.push({ type: 'letter', ref: l }); });
+    return out;
+  }
+
+  // Screen-space position of an automation target, either where it currently is or where it
+  // belongs — same two coordinate systems the manual grab code already bridges (stars live in
+  // the starfield's own SVG space, the letter lives in hero-relative CSS pixels).
+  function autoObjScreenPos(type, ref, useHome, starT, heroRect) {
+    if (type === 'star') {
+      return localToScreen(starT, useHome ? ref.homeX : ref.x, useHome ? ref.homeY : ref.y);
+    }
+    return { x: heroRect.left + (useHome ? ref.homeX : ref.cx), y: heroRect.top + (useHome ? ref.homeY : ref.cy) };
+  }
+
+  function autoObjRadiusScreen(type, ref, starT) {
+    return type === 'star' ? ref.baseSize * 0.5 * starT.scale : Math.max(ref.halfW, ref.halfH);
+  }
+
+  function updateArm() {
+    const armT = viewboxTransform(armSvg, 400, 420, 'meet');
+    // Moved up from where the stars section used to compute these fresh — automation's decisions
+    // (below) need them before targetX/targetY exist for this frame. blobX/blobY here are still
+    // last frame's settled spring position (this frame's spring step hasn't run yet), which is
+    // plenty accurate for "have we arrived" checks — one frame of lag is imperceptible.
+    const starT = viewboxTransform(starSvg, 1000, 600, 'meet', 'min');
+    const heroRect = heroEl.getBoundingClientRect();
+    const blobScreenPrev = localToScreen(armT, blobX, blobY);
+    const blobRadiusScreenPrev = Math.max(blobRadius * armT.scale, 10);
+
+    // Below the divider: work through anything out of place — nearest to the end-effector first —
+    // before resting. Interrupting (cursor back above the line) abandons whatever's in progress
+    // immediately and drops it right where it is, same as letting go of a real drag.
+    const belowDivider = hasMouse && rawMouseY > heroSubEl.getBoundingClientRect().top;
+    if (!belowDivider) {
+      autoState = 'idle'; autoGripping = false; autoTargetType = null; autoTargetRef = null;
+    } else {
+      if (autoState === 'idle') {
+        const misplaced = findMisplacedObjects();
+        if (misplaced.length) {
+          let nearest = null, nearestDist = Infinity;
+          misplaced.forEach(obj => {
+            const p = autoObjScreenPos(obj.type, obj.ref, false, starT, heroRect);
+            const d = Math.hypot(p.x - blobScreenPrev.x, p.y - blobScreenPrev.y);
+            if (d < nearestDist) { nearest = obj; nearestDist = d; }
+          });
+          autoTargetType = nearest.type; autoTargetRef = nearest.ref; autoState = 'seeking';
+        }
+      }
+      if (autoState === 'seeking') {
+        const p = autoObjScreenPos(autoTargetType, autoTargetRef, false, starT, heroRect);
+        const d = Math.hypot(p.x - blobScreenPrev.x, p.y - blobScreenPrev.y);
+        const r = blobRadiusScreenPrev + autoObjRadiusScreen(autoTargetType, autoTargetRef, starT);
+        if (d < r) {
+          if (autoTargetType === 'star') {
+            heldStar = autoTargetRef;
+          } else {
+            heldLetter = autoTargetRef;
+            heldLetter.moved = true;
+            heldLetter.grabDX = 0; heldLetter.grabDY = 0; // drive it straight to the blob's center, no offset to preserve
+          }
+          autoGripping = true;
+          autoState = 'carrying';
+        }
+      }
+      if (autoState === 'carrying') {
+        const p = autoObjScreenPos(autoTargetType, autoTargetRef, true, starT, heroRect);
+        const d = Math.hypot(p.x - blobScreenPrev.x, p.y - blobScreenPrev.y);
+        const r = blobRadiusScreenPrev + autoObjRadiusScreen(autoTargetType, autoTargetRef, starT);
+        if (d < r) {
+          // Arrived — snap exactly onto home (removes any residual gap) before releasing, so the
+          // held-object drag code further down never gets a chance to leave it a hair off target.
+          if (autoTargetType === 'star') {
+            autoTargetRef.x = autoTargetRef.homeX; autoTargetRef.y = autoTargetRef.homeY;
+            heldStar = null;
+          } else {
+            autoTargetRef.cx = autoTargetRef.homeX; autoTargetRef.cy = autoTargetRef.homeY;
+            setLetterPos(autoTargetRef, autoTargetRef.cx - autoTargetRef.halfW, autoTargetRef.cy - autoTargetRef.halfH);
+            heldLetter = null;
+          }
+          autoGripping = false; autoTargetType = null; autoTargetRef = null;
+          autoState = 'idle'; // re-checked immediately below/next frame — picks up the next misplaced object with no pause
+        }
+      }
+    }
+
+    // Base triangle: base edge rests on the same horizontal plane as the "h" baseline (no
+    // descender, so its measured bottom IS that baseline), recomputed every frame with this
+    // frame's own armT so it can never drift out of sync with a still-settling layout.
+    const armBaseBottomScreen = armBaseSourceEl.getBoundingClientRect().bottom;
+    const armBaseY = screenToLocal(armT, 0, armBaseBottomScreen).y - ARM_BASE_Y_TOTAL_NUDGE;
+    const armBaseApexY = armBaseY - ARM_BASE_HEIGHT; // apex sits wherever the fixed equilateral height puts it above the measured base — see comment above setup
+    armBaseEl.setAttribute('d', roundedPolygonPath([
+      { x: BASE.x, y: armBaseApexY },
+      { x: BASE.x - ARM_BASE_HALF_WIDTH, y: armBaseY },
+      { x: BASE.x + ARM_BASE_HALF_WIDTH, y: armBaseY }
+    ], ARM_BASE_FILLET));
+
+    // q1 (the base pivot) now follows the triangle's apex instead of the other way around — the
+    // arm rests ON the point of the triangle. baseY replaces the fixed BASE.y for every per-frame
+    // use below (BASE.y itself, and BASE.x, are untouched — x doesn't move, and the couple of
+    // one-time/idle-only uses of BASE.y at setup are harmless to leave as the original constant).
+    const baseY = armBaseApexY;
+    armEl.jointBase.setAttribute('cy', baseY);
+
+    let targetX, targetY;
+
+    if (autoState === 'seeking' || autoState === 'carrying') {
+      // Aim at the misplaced object itself while closing in, then at its home slot once gripped —
+      // the existing held-object drag code (further down) does the actual carrying once heldStar/
+      // heldLetter is set, same as it would for a real drag.
+      const p = autoObjScreenPos(autoTargetType, autoTargetRef, autoState === 'carrying', starT, heroRect);
+      targetX = (p.x - armT.offsetX) / armT.scale;
+      targetY = (p.y - armT.offsetY) / armT.scale;
+    } else if (hasMouse) {
+      targetX = (rawMouseX - armT.offsetX) / armT.scale;
+      targetY = (rawMouseY - armT.offsetY) / armT.scale;
+    } else {
+      const time = performance.now() / 1000;
+      targetX = BASE.x + 150 + Math.sin(time * 0.35) * 90;
+      targetY = baseY - 170 + Math.cos(time * 0.5) * 70;
+    }
+
+    // Dashed target line: locked straight to the raw target, no smoothing — x2/y2 are targetX/
+    // targetY themselves, so it's exactly where the real target is, every frame, with zero lag.
+    // Opacity is still eased (unrelated to position) — fades out once the cursor drops below the
+    // divider, the exact same belowDivider flag that sends the arm itself to its rest pose.
+    targetLineOpacityAmt += ((belowDivider ? 0 : 1) - targetLineOpacityAmt) * TARGET_LINE_OPACITY_EASE;
+    armEl.targetLine.setAttribute('x1', BASE.x); armEl.targetLine.setAttribute('y1', baseY);
+    armEl.targetLine.setAttribute('x2', targetX); armEl.targetLine.setAttribute('y2', targetY);
+    armEl.targetLine.style.opacity = (targetLineOpacityAmt * TARGET_LINE_MAX_OPACITY).toFixed(3);
+
+    // Direction is measured from the fixed BASE, not from the wrist — the wrist-to-cursor
+    // vector shrinks toward zero as the arm arrives, and atan2 of a near-zero vector is
+    // numerically unstable (that was the source of the 45°-jump glitching). Instead, solve
+    // the 2-link chain for a "virtual target" pulled back by L3 along the base→cursor line,
+    // so the wrist lands L3 short of the cursor and the end-effector segment — always aimed
+    // along that same stable direction — carries the tip the rest of the way to the cursor.
+    // This runs straight off the raw target now (no position-level smoothing beforehand) — it's
+    // fine for this to be noisy/instant, since the rate limiter below is what actually smooths
+    // the arm's motion, at the joint level, which is the only place that happens now.
+    const toTargetX = targetX - BASE.x, toTargetY = targetY - baseY;
+    const distToBase = Math.hypot(toTargetX, toTargetY) || 0.0001;
+    const dirX = toTargetX / distToBase, dirY = toTargetY / distToBase;
+
+    const virtualX = targetX - L3 * dirX;
+    const virtualY = targetY - L3 * dirY;
+
+    // Both elbow-branch solutions, every frame — see the elbow-flip comment above. rawR/minR/
+    // maxR/D are identical between the two (elbowSign only affects which side q2 bends to), so
+    // either branch's copy of them is fine for the live readout below.
+    const elbowUp = solveIK(BASE.x, baseY, L1, L2, virtualX, virtualY, 1);
+    const elbowDown = solveIK(BASE.x, baseY, L1, L2, virtualX, virtualY, -1);
+    const angPairDist = (q1a, q2a, q1b, q2b) =>
+      Math.abs(normalizeAngle(q1a - q1b)) + Math.abs(normalizeAngle(q2a - q2b));
+    const distUp = angPairDist(elbowUp.q1, elbowUp.q2, actualQ1, actualQ2);
+    const distDown = angPairDist(elbowDown.q1, elbowDown.q2, actualQ1, actualQ2);
+
+    let forceElbowFlip = false;
+    if (!hasMouse && autoState === 'idle') {
+      const nowSec = performance.now() / 1000;
+      if (nowSec >= elbowFlipNextAt) {
+        forceElbowFlip = true;
+        elbowFlipNextAt = nowSec + ELBOW_FLIP_MIN_GAP + Math.random() * (ELBOW_FLIP_MAX_GAP - ELBOW_FLIP_MIN_GAP);
+      }
+    }
+    // Normal rule: nearest branch wins (continuity). Forced-demo rule: deliberately take the
+    // farther one instead, just for this frame — the rate-limited dampers turn that into a real,
+    // visible swing to the other configuration rather than a pop, and once there, that branch IS
+    // the nearest one, so continuity holds it without any extra state needed.
+    const nearestIsUp = distUp <= distDown;
+    const chosen = forceElbowFlip ? (nearestIsUp ? elbowDown : elbowUp) : (nearestIsUp ? elbowUp : elbowDown);
+    const liveQ1 = chosen.q1, liveQ2 = chosen.q2;
+    const { rawR: ikRawR, minR: ikMinR, maxR: ikMaxR, D: ikD } = elbowUp;
+    const liveEE = Math.atan2(dirY, dirX);
+
+    // Live calculation readout: R and D are the actual law-of-cosines intermediates solveIK just
+    // used to solve q2 above — not a separate/decorative computation, the same numbers, read off
+    // the same call. Throttled per READOUT_INTERVAL_MS above.
+    //
+    // The state word (colored tspan) is a real 4-state machine, checked in priority order —
+    // these are NOT mutually exclusive facts (the arm could technically be both "below the
+    // divider" and "reach-clamped" in the same frame), so priority decides which one actually
+    // gets shown:
+    //   1. CLEANUP      — autoState is seeking/carrying: the arm is mid-automation, restoring a
+    //                      misplaced object. Outranks everything else — it's the most specific,
+    //                      most important thing happening.
+    //   2. IDLE          — nothing driving it toward a real target: either resting below the
+    //                      divider (wantNeutral) or there's no cursor at all (idle wander).
+    //                      Reach state is meaningless in either case, so it's checked before that.
+    //   3/4. IN REACH / OUT OF REACH — only reachable once neither of the above applies, i.e. the
+    //                      arm is actively tracking a real cursor target right now.
+    const nowMs = performance.now();
+    if (nowMs - lastReadoutUpdate > READOUT_INTERVAL_MS) {
+      lastReadoutUpdate = nowMs;
+      armEl.armSpecLive.firstChild.nodeValue = `R ${ikRawR.toFixed(1)} · D ${ikD.toFixed(2)} · `;
+
+      const cleanupNow = autoState === 'seeking' || autoState === 'carrying';
+      const restingNow = belowDivider && autoState === 'idle';
+      let stateWord, stateColor;
+      if (cleanupNow) {
+        stateWord = 'CLEANUP'; stateColor = ARM_STATE_COLORS.cleanup;
+      } else if (!hasMouse || restingNow) {
+        stateWord = 'IDLE'; stateColor = ARM_STATE_COLORS.idle;
+      } else {
+        const outOfReach = ikRawR < ikMinR - 0.5 || ikRawR > ikMaxR + 0.5;
+        stateWord = outOfReach ? 'OUT OF REACH' : 'IN REACH';
+        stateColor = outOfReach ? ARM_STATE_COLORS.outOfReach : ARM_STATE_COLORS.inReach;
+      }
+      armEl.armStateText.textContent = stateWord;
+      armEl.armStateText.setAttribute('fill', stateColor);
+    }
+
+    // Below the divider, once there's nothing left to clean up, the desired angles switch straight
+    // to the fixed rest pose — a hard switch, not a blend. The rate limiter below is what turns
+    // that into a gradual "powering down" motion; a second easing layer on top of it here would
+    // just be smoothing the same transition twice.
+    const wantNeutral = belowDivider && autoState === 'idle';
+    const desiredQ1 = wantNeutral ? NEUTRAL_Q1 : liveQ1;
+    const desiredQ2 = wantNeutral ? NEUTRAL_Q2 : liveQ2;
+    const desiredEE = wantNeutral ? NEUTRAL_EE : liveEE;
+
+    // The actual dampers: each joint can move at most its own max radians this frame, tapering
+    // down further still inside DECEL_WINDOW of its target. Idle cleanup (seeking/carrying a
+    // misplaced object) keeps the original, more deliberate rate; active user control (cursor
+    // tracking, idle wander, powering down to rest) runs 75% faster.
+    const isCleanupPhase = autoState === 'seeking' || autoState === 'carrying';
+    const q1Rate = isCleanupPhase ? Q1_MAX_RATE_CLEANUP : Q1_MAX_RATE_ACTIVE;
+    const q2Rate = isCleanupPhase ? Q2_MAX_RATE_CLEANUP : Q2_MAX_RATE_ACTIVE;
+    const eeRate = isCleanupPhase ? EE_MAX_RATE_CLEANUP : EE_MAX_RATE_ACTIVE;
+    actualQ1 = normalizeAngle(rateLimitAngle(actualQ1, desiredQ1, q1Rate, DECEL_WINDOW));
+    actualQ2 = normalizeAngle(rateLimitAngle(actualQ2, desiredQ2, q2Rate, DECEL_WINDOW));
+    actualEE = normalizeAngle(rateLimitAngle(actualEE, desiredEE, eeRate, DECEL_WINDOW));
+    const q1 = actualQ1, q2 = actualQ2, eeAngle = actualEE;
+
+    // Forward kinematics from the damped angles — this is now the only place elbow/wrist/tip get
+    // computed, whether the arm is following the cursor, mid-automation, or easing to rest.
+    const elbow = { x: BASE.x + L1 * Math.cos(q1), y: baseY + L1 * Math.sin(q1) };
+    const wrist = { x: elbow.x + L2 * Math.cos(q1 + q2), y: elbow.y + L2 * Math.sin(q1 + q2) };
+    const tip = { x: wrist.x + L3 * Math.cos(eeAngle), y: wrist.y + L3 * Math.sin(eeAngle) };
+
+    armEl.l1.setAttribute('x1', BASE.x); armEl.l1.setAttribute('y1', baseY);
+    armEl.l1.setAttribute('x2', elbow.x); armEl.l1.setAttribute('y2', elbow.y);
+
+    armEl.l2.setAttribute('x1', elbow.x); armEl.l2.setAttribute('y1', elbow.y);
+    armEl.l2.setAttribute('x2', wrist.x); armEl.l2.setAttribute('y2', wrist.y);
+
+    armEl.l3.setAttribute('x1', wrist.x); armEl.l3.setAttribute('y1', wrist.y);
+
+    armEl.jointElbow.setAttribute('cx', elbow.x); armEl.jointElbow.setAttribute('cy', elbow.y);
+    armEl.jointWrist.setAttribute('cx', wrist.x); armEl.jointWrist.setAttribute('cy', wrist.y);
+
+    // ---------- the blob: rigid tip position for logic, lag+stretch applied only for render ----------
+    // blobX/blobY stay the exact, undamped IK tip — the L3 line, star/letter grab detection, and
+    // ---------- the blob: rigid, sits exactly at the (now damped) end-effector tip ----------
+    // No spring, no lag, no squash/stretch/rotate — its only remaining motion comes from the
+    // joint damper above, same as the rest of the arm. blobX/blobY still get written to the
+    // shared outer-scope variables (not just a local), since automation's "where was the blob
+    // last frame" check at the top of the next frame depends on them.
+    blobX = tip.x;
+    blobY = tip.y;
+
+    armEl.l3.setAttribute('x2', blobX); armEl.l3.setAttribute('y2', blobY);
+
+    // autoGripping included here too, so an automated carry gets the same visual "gripping"
+    // feedback (squeeze + color) a real grab does — it's not a silent teleport-by-proxy. This is
+    // a discrete size/color change on grip state, not a physics wobble, so it's kept as-is.
+    // BLOB_R derived fresh each frame from the current star/arm scale ratio (see the comment on
+    // MAX_STAR_RADIUS_LOCAL/HALF_MM_PX above) — cheap arithmetic, no lookup/DOM cost.
+    const starToArmScaleForSize = starT.scale / armT.scale;
+    const BLOB_R = (MAX_STAR_RADIUS_LOCAL * starToArmScaleForSize + HALF_MM_PX / armT.scale) * 0.5; // 50% smaller
+    const BLOB_R_GRIP = BLOB_R * 1.2; // only a 20% grow on grip
+
+    blobRadius += ((isGripping || autoGripping ? BLOB_R_GRIP : BLOB_R) - blobRadius) * 0.2;
+    blobColorAmt += ((isGripping || autoGripping ? 1 : 0) - blobColorAmt) * 0.15;
+
+    armEl.gripBlob.setAttribute('cx', blobX);
+    armEl.gripBlob.setAttribute('cy', blobY);
+    armEl.gripBlob.setAttribute('rx', blobRadius);
+    armEl.gripBlob.setAttribute('ry', blobRadius);
+    armEl.gripBlob.setAttribute('fill', lerpColor(COLOR_BASE, COLOR_LIGHT, blobColorAmt * 0.5));
+
+    // Keep the reveal clip's shape identical to the visible blob (plain circle, no
+    // squash/stretch/rotation), so the yellow "shows through" region matches exactly.
+    blobClipShape.setAttribute('cx', blobX);
+    blobClipShape.setAttribute('cy', blobY);
+    blobClipShape.setAttribute('rx', blobRadius);
+    blobClipShape.setAttribute('ry', blobRadius);
+
+    // ---------- real-time joint coordinate frames + live angle readouts ----------
+    // q1: shoulder (global). q2: elbow, relative to the upper arm. q3: wrist, relative to
+    // the forearm — it's not a free/independent DOF in this model (it's derived so the
+    // end-effector always aims through the base→cursor line, which is what keeps it from
+    // glitching), but it's a real, well-defined joint angle, so it gets shown like the others.
+    //
+    // SVG's y-axis points down, so raw atan2() angles increase clockwise on screen — the
+    // opposite of the right-hand rule (positive = counterclockwise, z toward the viewer).
+    // The arm's actual geometry above (elbow/wrist/tip, already computed) is rendered from the
+    // RAW angles (q1, q1q2, eeAngle) and always has been. dQ1/dQ2/dQ3 below are ONLY a display
+    // transform for the printed degree numbers, so a positive reading matches what looks like a
+    // counterclockwise turn to a viewer — they must never be fed into cos/sin for anything that
+    // actually gets drawn. That's exactly the bug just found: the axis arrows, the wedges, and
+    // the dial needles were all being rendered from these negated values instead of the raw ones,
+    // which mirrors them vertically relative to where the real links actually point (cos/sin of
+    // -θ is a reflection of cos/sin of θ across the x-axis) — correct-looking numbers, wrong-
+    // looking geometry. Every render call below now uses q1/q1q2/eeAngle, matching the real arm
+    // exactly; dQ1/dQ2/dQ3 are used in exactly one place each, the three text labels.
+    const q1q2 = q1 + q2;
+    const q3 = normalizeAngle(eeAngle - q1q2);
+    const dQ1 = -q1, dQ2 = -q2, dQ3 = -q3;
+
+    // Joint dials: the group only ever translates (dial face stays fixed, non-rotating); the
+    // needle inside it gets its own rotate, to the joint's real outgoing heading — the same raw
+    // angle the arm's own link segment is drawn at, so the needle visibly sits ON the link.
+    const toDegRaw = (rad) => (rad * 180 / Math.PI).toFixed(2);
+    armEl.jointDialBase.setAttribute('transform', `translate(${BASE.x},${baseY})`);
+    armEl.jointDialBaseNeedle.setAttribute('transform', `rotate(${toDegRaw(q1)})`);
+    armEl.jointDialElbow.setAttribute('transform', `translate(${elbow.x},${elbow.y})`);
+    armEl.jointDialElbowNeedle.setAttribute('transform', `rotate(${toDegRaw(q1q2)})`);
+    armEl.jointDialWrist.setAttribute('transform', `translate(${wrist.x},${wrist.y})`);
+    armEl.jointDialWristNeedle.setAttribute('transform', `rotate(${toDegRaw(eeAngle)})`);
+    // Counter-rotation: the ring of dots spins at the exact same rate as the orange EE segment
+    // (eeAngle) but in the opposite direction — a small "gear meshing against the segment" effect,
+    // independent of the needle right next to it (which still rotates WITH the segment).
+    armEl.jointDialWristRing.setAttribute('transform', `rotate(${toDegRaw(-eeAngle)})`);
+
+    // Each axis frame is drawn at the REFERENCE angle its joint's own wedge sweeps FROM (see the
+    // sectorPath calls below — angleStart there is exactly these same three values), not the
+    // outgoing link's current heading: base holds at the true fixed 0°, elbow extends link 1
+    // (q1), wrist extends link 2 (q1q2). All raw, matching the real geometry — see the comment
+    // above for why these can't be the negated dQ values.
+    setAxis(armEl.axBaseX, armEl.axBaseY, BASE.x, baseY, 0, AXIS_LEN);
+    setAxis(armEl.axElbowX, armEl.axElbowY, elbow.x, elbow.y, q1, AXIS_LEN);
+    setAxis(armEl.axWristX, armEl.axWristY, wrist.x, wrist.y, q1q2, AXIS_LEN_WRIST);
+
+    // Each slice spans from the incoming link's heading to the outgoing one, so its angular
+    // width IS the joint's own angle (q1 measured from the global 0° reference, q2/q3 measured
+    // from the link before them) — not just an absolute-frame readout like the axis arrows.
+    // The joint name rides along with its own value now (was previously overwritten by the bare
+    // degree number every frame, which meant the "q1"/"q2"/"q3" identity was destroyed on the very
+    // first animation frame and never visible again — a viewer just saw three unlabeled numbers).
+    // These three lines are the ONLY place dQ1/dQ2/dQ3 (the negated, display-only values) get used.
+    armEl.labelQ1.textContent = `q1 ${toDeg(dQ1)}°`;
+    armEl.labelQ2.textContent = `q2 ${toDeg(dQ2)}°`;
+    armEl.labelQ3.textContent = `q3 ${toDeg(dQ3)}°`;
+
+    const sectorQ1Info = sectorPath(BASE.x, baseY, SECTOR_LEN, 0, q1);
+    const sectorQ2Info = sectorPath(elbow.x, elbow.y, SECTOR_LEN, q1, q1q2);
+    const sectorQ3Info = sectorPath(wrist.x, wrist.y, SECTOR_LEN_WRIST, q1q2, eeAngle);
+    armEl.sectorQ1.setAttribute('d', sectorQ1Info.d);
+    armEl.sectorQ2.setAttribute('d', sectorQ2Info.d);
+    armEl.sectorQ3.setAttribute('d', sectorQ3Info.d);
+
+    armEl.labelQ1.setAttribute('x', sectorQ1Info.labelX); armEl.labelQ1.setAttribute('y', sectorQ1Info.labelY);
+    armEl.labelQ2.setAttribute('x', sectorQ2Info.labelX); armEl.labelQ2.setAttribute('y', sectorQ2Info.labelY);
+    armEl.labelQ3.setAttribute('x', sectorQ3Info.labelX); armEl.labelQ3.setAttribute('y', sectorQ3Info.labelY);
+
+    // White-to-orange reveal: keep jointsClip's three circles pinned to the live joint positions
+    // (same radii as the visible dots), and keep each orange twin an exact copy of its white
+    // label's text + position. Whichever label is currently sitting over whichever joint gets its
+    // overlapping sliver shown here, on top, in orange — the rest of each twin stays clipped away.
+    armEl.jointsClipBase.setAttribute('cx', BASE.x); armEl.jointsClipBase.setAttribute('cy', baseY);
+    armEl.jointsClipElbow.setAttribute('cx', elbow.x); armEl.jointsClipElbow.setAttribute('cy', elbow.y);
+    armEl.jointsClipWrist.setAttribute('cx', wrist.x); armEl.jointsClipWrist.setAttribute('cy', wrist.y);
+    // Segments, same matching: L1/L2 use .arm-link's 2.5 stroke-width, L3 uses .end-effector's 2 —
+    // and L3's real endpoint is the blob's actual spring-lagged position, not the idealized IK
+    // tip, same as armL3 itself is drawn (see the comment above where armEl.l3's x2/y2 are set).
+    armEl.jointsClipL1.setAttribute('points', segmentRectPoints(BASE.x, baseY, elbow.x, elbow.y, 1.25));
+    armEl.jointsClipL2.setAttribute('points', segmentRectPoints(elbow.x, elbow.y, wrist.x, wrist.y, 1.25));
+    armEl.jointsClipL3.setAttribute('points', segmentRectPoints(wrist.x, wrist.y, blobX, blobY, 1.0));
+
+    armEl.labelQ1Reveal.textContent = armEl.labelQ1.textContent;
+    armEl.labelQ1Reveal.setAttribute('x', sectorQ1Info.labelX); armEl.labelQ1Reveal.setAttribute('y', sectorQ1Info.labelY);
+    armEl.labelQ2Reveal.textContent = armEl.labelQ2.textContent;
+    armEl.labelQ2Reveal.setAttribute('x', sectorQ2Info.labelX); armEl.labelQ2Reveal.setAttribute('y', sectorQ2Info.labelY);
+    armEl.labelQ3Reveal.textContent = armEl.labelQ3.textContent;
+    armEl.labelQ3Reveal.setAttribute('x', sectorQ3Info.labelX); armEl.labelQ3Reveal.setAttribute('y', sectorQ3Info.labelY);
+
+    // ---------- stars: blob reveals yellow where it covers one, grasp shrinks + drags them ----------
+    // The blob lives in the arm's SVG, the stars live in the full-hero starfield SVG — two
+    // different coordinate spaces — so distance/dragging is done in screen pixels. starT/heroRect
+    // themselves are now computed once, up at the top of the frame (automation needs them before
+    // this point exists) — just the fresh post-spring-update blob position is new here.
+    const blobScreen = localToScreen(armT, blobX, blobY);
+    // Real border-to-border overlap: blob's own screen radius + each star's own screen
+    // radius (from its glyph size), not a fixed fudge factor. A small floor keeps pickup/
+    // hover reliable now that the blob itself is much smaller.
+    const blobRadiusScreen = Math.max(blobRadius * armT.scale, 10);
+
+    // One gripper, one thing held at a time — stars and letters are searched together and
+    // whichever is nearest wins, same as a real gripper can't hold two objects at once. The
+    // automation bypasses this search entirely (it sets heldStar/heldLetter directly, above), so
+    // this only ever fires for a real user grab.
+    if (isGripping && !heldStar && !heldLetter) {
+      let nearest = null, nearestType = null, nearestDist = Infinity;
+      stars.forEach(s => {
+        const starScreen = localToScreen(starT, s.x, s.y);
+        const starRadiusScreen = s.baseSize * 0.5 * starT.scale;
+        const d = Math.hypot(blobScreen.x - starScreen.x, blobScreen.y - starScreen.y);
+        if (d < blobRadiusScreen + starRadiusScreen && d < nearestDist) { nearest = s; nearestType = 'star'; nearestDist = d; }
+      });
+      letters.forEach(l => {
+        const letterScreenX = heroRect.left + l.cx, letterScreenY = heroRect.top + l.cy;
+        const letterRadiusScreen = Math.max(l.halfW, l.halfH);
+        const d = Math.hypot(blobScreen.x - letterScreenX, blobScreen.y - letterScreenY);
+        if (d < blobRadiusScreen + letterRadiusScreen && d < nearestDist) { nearest = l; nearestType = 'letter'; nearestDist = d; }
+      });
+      // Grab offset: whatever the gap was between the object's center and the blob at the
+      // instant of grabbing, keep it — don't recenter the object under the blob. Real tongs
+      // don't yank whatever they close on to their own middle — except stars, which snap to
+      // center on purpose (that's the one grab feel we're keeping from before).
+      if (nearestType === 'star') {
+        heldStar = nearest;
+      } else if (nearestType === 'letter') {
+        heldLetter = nearest;
+        heldLetter.grabDX = heldLetter.cx - (blobScreen.x - heroRect.left);
+        heldLetter.grabDY = heldLetter.cy - (blobScreen.y - heroRect.top);
+      }
+    } else if (!isGripping && !autoGripping) {
+      // autoGripping keeps a held object through automation's own carry — real release (or the
+      // automation's own explicit release on arrival, above) is what's allowed to clear these.
+      heldStar = null;
+      heldLetter = null;
+    }
+
+    if (heldStar) {
+      const localPos = screenToLocal(starT, blobScreen.x, blobScreen.y);
+      heldStar.x = localPos.x;
+      heldStar.y = localPos.y;
+    }
+
+    if (heldLetter) {
+      heldLetter.moved = true;
+      heldLetter.cx = (blobScreen.x - heroRect.left) + heldLetter.grabDX;
+      heldLetter.cy = (blobScreen.y - heroRect.top) + heldLetter.grabDY;
+      setLetterPos(heldLetter, heldLetter.cx - heldLetter.halfW, heldLetter.cy - heldLetter.halfH);
+    }
+
+    // Letters: same white→yellow reveal as the stars — the yellow twin is clipped to a circle
+    // matching the blob's live screen position/size, so only the sliver actually under the
+    // blob shows through. The held letter is a guaranteed full reveal (clip removed entirely),
+    // same reasoning as heldStarReveal: "gripped" should never depend on exact pixel overlap.
+    letters.forEach(l => {
+      if (l === heldLetter) {
+        l.revealEl.style.clipPath = 'none';
+      } else {
+        const originX = heroRect.left + (l.cx - l.halfW);
+        const originY = heroRect.top + (l.cy - l.halfH);
+        const circleX = blobScreen.x - originX;
+        const circleY = blobScreen.y - originY;
+        l.revealEl.style.clipPath = `circle(${blobRadiusScreen}px at ${circleX}px ${circleY}px)`;
+      }
+    });
+
+    // Size ratio between the two SVGs' local coordinate systems, so a reveal clone's font-size
+    // (drawn in the arm's local units) still matches the real star's on-screen size.
+    const starToArmScale = starT.scale / armT.scale;
+
+    const starTime = performance.now() / 1000;
+    stars.forEach(s => {
+      const starScreen = localToScreen(starT, s.x, s.y);
+      const fontSize = s.baseSize * (s === heldStar ? 0.75 : 1);
+
+      // The real star: always its plain white/paper self, never recolored. It's the ground
+      // truth — untouched flicker, untouched color. Whatever's covered by the blob simply
+      // won't be visible here, because the opaque blob is painted on top of it.
+      s.el.setAttribute('x', s.x);
+      s.el.setAttribute('y', s.y);
+      s.el.setAttribute('font-size', fontSize);
+      // Real fade in/out now, not a gentle shimmer — the old range (opacity 0.45-0.9) never let a
+      // star get close to invisible, so it read as a subtle brightness wobble rather than an
+      // actual flicker. flicker itself is just sin() remapped from [-1,1] to [0,1]; each star's
+      // own random phase/speed (set at setup, above) keeps the whole field from flickering in
+      // sync — at any moment some stars are fading in, some out, some near-dark, some near-full.
+      const flicker = (1 + Math.sin(starTime * s.speed + s.phase)) / 2;
+      s.el.style.opacity = (0.05 + flicker * 0.9).toFixed(2);
+
+      // The yellow reveal clone: same glyph, same screen position, but drawn in the arm SVG
+      // (on top of the opaque blob) and clipped to the blob's exact live silhouette. Only the
+      // sliver that's actually covered by the blob ever shows any pixels — that sliver renders
+      // in neon yellow instead of vanishing, which is what makes the covered part visible.
+      const armLocal = screenToLocal(armT, starScreen.x, starScreen.y);
+      s.revealEl.setAttribute('x', armLocal.x);
+      s.revealEl.setAttribute('y', armLocal.y);
+      s.revealEl.setAttribute('font-size', fontSize * starToArmScale);
+    });
+
+    // The gripped star: always fully yellow, unclipped, guaranteed — not dependent on how
+    // precisely its glyph happens to overlap the blob's shape frame to frame.
+    if (heldStar) {
+      const armLocal = screenToLocal(armT, blobScreen.x, blobScreen.y);
+      heldStarReveal.setAttribute('x', armLocal.x);
+      heldStarReveal.setAttribute('y', armLocal.y);
+      heldStarReveal.setAttribute('font-size', heldStar.baseSize * 0.75 * starToArmScale);
+      heldStarReveal.setAttribute('opacity', '1');
+    } else {
+      heldStarReveal.setAttribute('opacity', '0');
+    }
+
+    // ---------- 8 orbiting satellite spheres ----------
+    // Only present while actually gripping/carrying — isGripping is the real click-and-hold
+    // state, autoGripping is the same feedback during an automated "cleanup mode" carry. emergeAmt
+    // eases toward that on/off target (fast rise, slower fall). Rotation is -eeAngle, same as
+    // jointDialWristRing above — one transform (translate + rotate + scale) instead of a per-dot
+    // per-frame trig loop.
+    const wantOrbit = isGripping || autoGripping;
+    emergeAmt += ((wantOrbit ? 1 : 0) - emergeAmt) * (wantOrbit ? EMERGE_RISE : EMERGE_FALL);
+
+    const orbitR = blobRadius * ORBIT_RADIUS_FACTOR * emergeAmt;
+    orbitSpheresEl.setAttribute(
+      'transform',
+      `translate(${blobX} ${blobY}) rotate(${toDegRaw(-eeAngle)}) scale(${orbitR.toFixed(3)})`
+    );
+    orbitSpheresEl.setAttribute('fill', lerpColor(COLOR_BASE, COLOR_LIGHT, blobColorAmt * 0.5));
+    orbitSpheresEl.setAttribute('opacity', emergeAmt.toFixed(2));
+
+    requestAnimationFrame(updateArm);
+  }
+  requestAnimationFrame(updateArm);
+
+  // ---------- work index: click-to-expand detail, single-open accordion ----------
+  // Each row's detail panel toggles open/closed on click. Opening one row closes any other
+  // currently-open row, so only one project's detail is expanded at a time.
+  (function () {
+    // Populate every inline-schematic detail slot once, up front — these are cheap static
+    // clones of the hidden #svgLibrary, not re-cloned on every open/close.
+    document.querySelectorAll('[data-svg-slot]').forEach((slot) => {
+      const src = document.getElementById(slot.dataset.svgSlot);
+      if (src) slot.appendChild(src.cloneNode(true));
+    });
+
+    const rows = document.querySelectorAll('.work-row');
+    rows.forEach((row) => {
+      row.addEventListener('click', () => {
+        const item = row.closest('.work-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.work-item.open').forEach((openItem) => {
+          if (openItem !== item) openItem.classList.remove('open');
+        });
+        item.classList.toggle('open', !isOpen);
+      });
+    });
+  })();
+
+  // ---------- lightbox: click any project image to open a slideshow of that project's images ----------
+  // Every clickable image (.lightbox-trigger) is grouped by its containing .work-item — the main
+  // detail photo plus every gallery thumbnail for that project become one ordered set, so
+  // left/right always cycles through just that project's own images, never bleeding into another
+  // project's set. Nothing here ever opens a new tab.
+  (function () {
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxCaption = document.getElementById('lightboxCaption');
+    const lightboxCounter = document.getElementById('lightboxCounter');
+    let currentSet = [];
+    let currentIndex = 0;
+
+    function getSetFor(trigger) {
+      const item = trigger.closest('.work-item');
+      const triggers = Array.from(item.querySelectorAll('.lightbox-trigger'));
+      return triggers.map((el) => ({
+        src: el.dataset.img || el.querySelector('img').getAttribute('src'),
+        caption: el.dataset.caption || ''
+      }));
+    }
+
+    function show(index) {
+      currentIndex = (index + currentSet.length) % currentSet.length;
+      const entry = currentSet[currentIndex];
+      lightboxImg.src = entry.src;
+      lightboxImg.alt = entry.caption;
+      lightboxCaption.textContent = entry.caption;
+      lightboxCounter.textContent = currentSet.length > 1 ? `${currentIndex + 1} / ${currentSet.length}` : '';
+    }
+
+    function open(trigger) {
+      currentSet = getSetFor(trigger);
+      const clickedSrc = trigger.dataset.img || trigger.querySelector('img').getAttribute('src');
+      const startIndex = currentSet.findIndex((e) => e.src === clickedSrc);
+      show(startIndex >= 0 ? startIndex : 0);
+      lightbox.classList.add('open');
+    }
+
+    function close() {
+      lightbox.classList.remove('open');
+      lightboxImg.src = '';
+    }
+
+    document.querySelectorAll('.lightbox-trigger').forEach((trigger) => {
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation(); // don't also toggle the row/accordion this image sits inside
+        open(trigger);
+      });
+    });
+
+    document.getElementById('lightboxPrev').addEventListener('click', (e) => { e.stopPropagation(); show(currentIndex - 1); });
+    document.getElementById('lightboxNext').addEventListener('click', (e) => { e.stopPropagation(); show(currentIndex + 1); });
+    document.getElementById('lightboxClose').addEventListener('click', close);
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) close(); }); // click backdrop to close
+
+    document.addEventListener('keydown', (e) => {
+      if (!lightbox.classList.contains('open')) return;
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowLeft') show(currentIndex - 1);
+      else if (e.key === 'ArrowRight') show(currentIndex + 1);
+    });
+  })();
+</script>
+</body>
+</html>
