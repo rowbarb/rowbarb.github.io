@@ -205,7 +205,15 @@
     z-index: 303;
     top: 6%;
     right: clamp(-20px, 3vw, 40px);
-    width: min(50vw, 560px);
+    /* 55vh cap added alongside the existing 50vw/560px caps: in a short viewport (a docked/
+       split-screen browser window, for instance), this box was previously a fixed ~588px tall
+       regardless of how little vertical room existed, since only width was ever constrained.
+       With .hero-sub anchored to the bottom of .hero, a fixed-height box starting at top:6% and
+       a bottom-anchored text block have no room to avoid colliding once the viewport gets short
+       — capping height (via width, since the box's proportions are locked to the arm SVG's own
+       400:420 aspect ratio) leaves at least ~40% of viewport height free below it for .hero-sub,
+       shrinking the whole arm/readout scene together rather than letting it overlap the text. */
+    width: min(50vw, 560px, 55vh);
     pointer-events: none;
   }
   .schematic svg { width: 100%; height: auto; overflow: visible; }
