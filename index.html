@@ -75,14 +75,14 @@
     mix-blend-mode: difference;
     /* Pixel-precise green→purple over any real text on the page (nav, name, copy, everything)
        — genuine mix-blend-mode, not an approximation. Stars are excluded from this without any
-       special-casing: .starfield (z-index 301) and .schematic (z-index 302) both paint AFTER
+       special-casing: .starfield (z-index 301) and .schematic (z-index 303) both paint AFTER
        this dot (z-index 300), so the stars/arm are never part of what's "beneath" the dot —
        structurally impossible for them to be in its blend backdrop. */
   }
   @media (hover: none) { .cursor-dot { display: none; } }
   /* The lightbox (z-index 400) otherwise paints over the fixed cursor dot (z-index 300),
      making it invisible while viewing an enlarged image. Only bump the dot above the lightbox
-     while it's actually open, so the hero's cursor-behind-stars stacking (z-index 301-303)
+     while it's actually open, so the hero's cursor-behind-stars stacking (z-index 301-304)
      stays untouched everywhere else. */
   body:has(.lightbox.open) .cursor-dot { z-index: 450; }
 
@@ -94,13 +94,13 @@
     flex-direction: column;
     justify-content: flex-end;
     padding: 0 clamp(20px, 5vw, 56px) clamp(140px, 18vh, 200px);
-    max-width: 1400px;
+    max-width: 1800px;
     margin: 0 auto;
   }
 
   .hero-kicker {
     position: relative;
-    z-index: 1;
+    z-index: 302; /* above .starfield (301) — stars now extend down into this content band and must stay behind it */
     font-family: var(--mono);
     font-size: 0.82rem;
     color: var(--accent);
@@ -112,7 +112,7 @@
 
   .hero-title {
     position: relative;
-    z-index: 1;
+    z-index: 302; /* above .starfield (301) — see .hero-kicker's z-index comment */
     font-family: var(--display);
     font-weight: 700;
     line-height: 0.86;
@@ -132,7 +132,7 @@
   .letter-layer {
     position: absolute;
     inset: 0;
-    z-index: 303; /* above .schematic (302) — a held or merely-passed-over letter never disappears under the blob */
+    z-index: 304; /* above .schematic (303) — a held or merely-passed-over letter never disappears under the blob */
     pointer-events: none;
     overflow: visible;
   }
@@ -164,7 +164,7 @@
 
   .hero-sub {
     position: relative;
-    z-index: 1;
+    z-index: 302; /* above .starfield (301) — see .hero-kicker's z-index comment */
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -196,11 +196,13 @@
 
   .schematic {
     position: absolute;
-    /* Above the cursor dot (z-index: 300) and above .starfield below, in that order — so the
-       cursor now travels behind the whole star/arm scene instead of covering it. .hero itself
-       doesn't create its own stacking context (position: relative with no z-index), so these
-       values are compared directly against the cursor dot's, not scoped away from it. */
-    z-index: 302;
+    /* Above the cursor dot (300), above .starfield (301), and now above .hero-kicker/.hero-title/
+       .hero-sub/.scroll-cue too (302, bumped up so stars can pass behind them) — the arm still
+       renders in front of the name/copy, same as before this change, just at 303 instead of 302
+       so it stays one level above wherever the text now sits. .hero itself doesn't create its own
+       stacking context (position: relative with no z-index), so these values are compared
+       directly against each other, not scoped away from one another. */
+    z-index: 303;
     top: 6%;
     right: clamp(-20px, 3vw, 40px);
     width: min(50vw, 560px);
@@ -332,7 +334,7 @@
 
   .scroll-cue {
     position: absolute;
-    z-index: 1;
+    z-index: 302; /* above .starfield (301) — see .hero-kicker's z-index comment */
     bottom: 64px;
     left: clamp(20px, 5vw, 56px);
     font-family: var(--mono);
@@ -367,17 +369,21 @@
   }
   .marquee-track {
     display: inline-flex;
+    align-items: center;
+    gap: 28px; /* even spacing between one skill's hyphen and the next skill's word — see .marquee-track span comment */
     animation: marquee 26s linear infinite;
   }
   .marquee-track span {
     font-family: var(--display);
     font-weight: 600;
     font-size: 1.4rem;
-    padding: 0 28px;
     color: var(--paper-dim);
     display: inline-flex;
     align-items: center;
-    gap: 28px;
+    gap: 28px; /* word-to-hyphen spacing, matching .marquee-track's gap so every interval is equal.
+                  No padding here — padding on top of two adjacent gaps was doubling the space
+                  after each hyphen (56px) vs. before it (28px). One gap value, used consistently
+                  at both levels, keeps every word/hyphen interval the same width. */
   }
   .marquee-track span::after {
     content: '—';
@@ -757,8 +763,16 @@
            the 2 already-highest, x=80 and x=720, right where they were) — spread across a 0-12
            band instead of a literal "0-7cm" (this SVG's coordinate space is abstract, not tied
            to a physical unit, so that's an approximation, not a conversion). -->
-      <!-- Big dipper (do not move/delete): the 7 stars below are the ones you circled — left
-           untouched, in file order and coordinates, through the thinning/redistribution pass. -->
+      <!-- Whole field shifted down as a single rigid group (translate, not per-star edits) so
+           every star keeps its exact position relative to every other star — the Big Dipper
+           shape and the rest of the composition below are untouched, just moved as a block.
+           Was concentrated in the y=0-269 band (top-left corner of a 600-tall field); +200 pulls
+           the whole thing down so it's centered in the upper-middle instead of hugging the top,
+           genuinely overlapping the hero content's vertical band rather than sitting above it.
+           This is safe now that .starfield (z-index 301) renders behind .hero-kicker/.hero-title/
+           .hero-sub (bumped to z-index 302, see their rule comments) — stars can pass behind the
+           name/copy without visually colliding with it. -->
+      <g transform="translate(0, 200)">
       <text class="hero-star" x="498" y="53">*</text>
       <text class="hero-star" x="415" y="85">*</text>
       <text class="hero-star" x="603" y="77">*</text>
@@ -786,21 +800,20 @@
       <text class="hero-star" x="651" y="0">*</text>
       <text class="hero-star" x="900" y="240">*</text>
 
-      <!-- New batch: fills the band just below the original cluster (y=270-370), which was
-           previously empty. Kept in a tighter band than the full lower half of the viewBox,
-           since .hero-copy/.hero-title now sit anchored lower and their exact rendered height
-           varies by viewport — safer to extend the field moderately than risk stars landing
-           on top of the repositioned text. -->
-      <text class="hero-star" x="120" y="290">*</text>
-      <text class="hero-star" x="260" y="330">*</text>
-      <text class="hero-star" x="50" y="350">*</text>
-      <text class="hero-star" x="380" y="300">*</text>
-      <text class="hero-star" x="330" y="360">*</text>
-      <text class="hero-star" x="620" y="290">*</text>
-      <text class="hero-star" x="760" y="320">*</text>
-      <text class="hero-star" x="880" y="300">*</text>
-      <text class="hero-star" x="940" y="350">*</text>
-      <text class="hero-star" x="540" y="340">*</text>
+      <!-- Fill-in batch: originally placed in the arm's right-side operating zone. Now moves
+           down with the rest of the group via the same transform, still in that same relative
+           position within the constellation. -->
+      <text class="hero-star" x="620" y="220">*</text>
+      <text class="hero-star" x="760" y="240">*</text>
+      <text class="hero-star" x="880" y="215">*</text>
+      <text class="hero-star" x="940" y="250">*</text>
+      <text class="hero-star" x="680" y="255">*</text>
+      <text class="hero-star" x="820" y="235">*</text>
+      <text class="hero-star" x="950" y="200">*</text>
+      <text class="hero-star" x="720" y="205">*</text>
+      <text class="hero-star" x="600" y="245">*</text>
+      <text class="hero-star" x="870" y="255">*</text>
+      </g>
     </svg>
   </div>
 
