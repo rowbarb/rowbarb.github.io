@@ -696,73 +696,50 @@
       <!-- "meet" (not "slice") so the whole viewBox is always visible, never cropped.
            preserveAspectRatio is xMidYMin, not xMidYMid: .hero has no top padding and nav is
            position:fixed (out of flow), so .hero's own top edge already sits at the true top of
-           the viewport — same vertical band as the nav. The earlier xMidYMid centering was
-           adding a blank letterbox gap above y=0 of this viewBox, pushing every star down from
-           that shared top edge regardless of their y-value. Aligning to YMin removes that gap,
-           so y=0 here now renders flush with the top of .hero (and thus close to the nav).
-           Placement below is read directly off your marked-up screenshot — one star per
-           red dot, none of your own auto-placed layout left in.
-           17 more added along the very top, above all of these — closest to "around the
-           RB/about/work/contact" nav a hero-scoped, scrolls-with-the-page SVG can get (it still
-           can't be pinned to the nav's own fixed box, so it won't hold that level if you scroll).
-           The 15 that were sitting lowest among this batch got pulled higher still (kept
-           the 2 already-highest, x=80 and x=720, right where they were) — spread across a 0-12
-           band instead of a literal "0-7cm" (this SVG's coordinate space is abstract, not tied
-           to a physical unit, so that's an approximation, not a conversion). -->
-      <!-- Whole field shifted down by +200, baked directly into every star's own y attribute
-           below (not a wrapping <g transform>) — every star keeps its exact position relative to
-           every other star since the same constant was added to each one, so the Big Dipper shape
-           and the rest of the composition are untouched, just moved as a block. A <g transform>
-           was tried first, but the grab/drag hit-test code reads each star's x/y attributes
-           directly and had no way to know about a transform on an ancestor element, so the arm
-           could never actually reach a star even though it looked correctly positioned — baking
-           the offset into the attributes themselves keeps the DOM and the JS model in agreement.
-           Was concentrated in the y=0-269 band (top-left corner of a 600-tall field); +200 pulls
-           the whole thing down so it's centered in the upper-middle instead of hugging the top,
-           genuinely overlapping the hero content's vertical band rather than sitting above it.
-           This is safe now that .starfield (z-index 301) renders behind .hero-kicker/.hero-title/
-           .hero-sub (bumped to z-index 302, see their rule comments) — stars can pass behind the
-           name/copy without visually colliding with it. -->
-      <text class="hero-star" x="498" y="253">*</text>
-      <text class="hero-star" x="415" y="285">*</text>
-      <text class="hero-star" x="603" y="277">*</text>
-      <text class="hero-star" x="690" y="307">*</text>
-      <text class="hero-star" x="816" y="323">*</text>
-      <text class="hero-star" x="698" y="381">*</text>
-      <text class="hero-star" x="782" y="390">*</text>
+           the viewport — same vertical band as the nav. y=0 here renders flush with the top of
+           .hero (and thus close to the nav). -->
+      <!-- Randomly scattered across the box (x: 0-1000 full width, y: 0-580, leaving margin above
+           the dynamic floor that clamps further at runtime against wherever .hero-sub's divider
+           line actually ends up for the current viewport) — not a real sky, just placed for a
+           natural, non-clumped spread (stratified grid-cell + jitter, minimum spacing enforced
+           against every other star). The one exception is the Big Dipper below, kept as the single
+           recognizable shape in the field rather than randomized like the rest. -->
+      <!-- Big Dipper (Ursa Major) — the exact shape marked up and approved earlier, kept
+           as the one recognizable constellation in an otherwise randomly-scattered field. -->
+      <text class="hero-star" x="498" y="253" font-size="9.4">*</text>
+      <text class="hero-star" x="415" y="285" font-size="13.2">*</text>
+      <text class="hero-star" x="603" y="277" font-size="12.9">*</text>
+      <text class="hero-star" x="690" y="307" font-size="15.0">*</text>
+      <text class="hero-star" x="816" y="323" font-size="13.9">*</text>
+      <text class="hero-star" x="698" y="381" font-size="10.7">*</text>
+      <text class="hero-star" x="782" y="390" font-size="11.3">*</text>
 
-      <!-- Everything else: was 24 stars, too dense and all crammed into the top band. Thinned to
-           14 (10 deleted) and spread across the full width and a taller y-range so they frame the
-           dipper and fill the rest of the field instead of piling on top of it. -->
-      <text class="hero-star" x="40" y="215">*</text>
-      <text class="hero-star" x="170" y="260">*</text>
-      <text class="hero-star" x="300" y="220">*</text>
-      <text class="hero-star" x="60" y="340">*</text>
-      <text class="hero-star" x="220" y="400">*</text>
-      <text class="hero-star" x="350" y="350">*</text>
-      <text class="hero-star" x="469" y="469">*</text>
-      <text class="hero-star" x="890" y="220">*</text>
-      <text class="hero-star" x="950" y="290">*</text>
-      <text class="hero-star" x="870" y="400">*</text>
-      <text class="hero-star" x="960" y="440">*</text>
-      <text class="hero-star" x="451" y="378">*</text>
-      <text class="hero-star" x="597" y="393">*</text>
-      <text class="hero-star" x="651" y="200">*</text>
-      <text class="hero-star" x="900" y="440">*</text>
-
-      <!-- Fill-in batch: originally placed in the arm's right-side operating zone, still in that
-           same relative position within the constellation now that the +200 shift is baked
-           directly into every star's y (see the top of this block) instead of a wrapping <g>. -->
-      <text class="hero-star" x="620" y="420">*</text>
-      <text class="hero-star" x="760" y="440">*</text>
-      <text class="hero-star" x="880" y="415">*</text>
-      <text class="hero-star" x="940" y="450">*</text>
-      <text class="hero-star" x="680" y="455">*</text>
-      <text class="hero-star" x="820" y="435">*</text>
-      <text class="hero-star" x="950" y="400">*</text>
-      <text class="hero-star" x="720" y="405">*</text>
-      <text class="hero-star" x="600" y="445">*</text>
-      <text class="hero-star" x="870" y="455">*</text>
+      <!-- Random fill: stratified placement (grid cell + jitter) across the box so it reads
+           as scattered rather than clumped, min. spacing enforced against every star already
+           placed (including the dipper) so nothing sits on top of anything else. -->
+      <text class="hero-star" x="759" y="166" font-size="13.0">*</text>
+      <text class="hero-star" x="306" y="21" font-size="9.1">*</text>
+      <text class="hero-star" x="625" y="41" font-size="11.8">*</text>
+      <text class="hero-star" x="875" y="491" font-size="10.0">*</text>
+      <text class="hero-star" x="228" y="316" font-size="9.7">*</text>
+      <text class="hero-star" x="879" y="413" font-size="9.4">*</text>
+      <text class="hero-star" x="266" y="512" font-size="13.6">*</text>
+      <text class="hero-star" x="89" y="22" font-size="9.8">*</text>
+      <text class="hero-star" x="365" y="382" font-size="10.5">*</text>
+      <text class="hero-star" x="271" y="400" font-size="11.3">*</text>
+      <text class="hero-star" x="895" y="297" font-size="14.2">*</text>
+      <text class="hero-star" x="745" y="274" font-size="9.5">*</text>
+      <text class="hero-star" x="951" y="190" font-size="11.7">*</text>
+      <text class="hero-star" x="387" y="528" font-size="12.3">*</text>
+      <text class="hero-star" x="740" y="427" font-size="14.3">*</text>
+      <text class="hero-star" x="709" y="521" font-size="13.9">*</text>
+      <text class="hero-star" x="530" y="536" font-size="14.2">*</text>
+      <text class="hero-star" x="281" y="180" font-size="10.7">*</text>
+      <text class="hero-star" x="627" y="159" font-size="11.5">*</text>
+      <text class="hero-star" x="939" y="66" font-size="11.2">*</text>
+      <text class="hero-star" x="593" y="402" font-size="14.3">*</text>
+      <text class="hero-star" x="456" y="210" font-size="14.7">*</text>
+      <text class="hero-star" x="80" y="419" font-size="9.9">*</text>
     </svg>
   </div>
 
@@ -1966,27 +1943,27 @@
       revealEl,
       x: +el.getAttribute('x'),
       y: +el.getAttribute('y'),
-      baseSize: 9 + Math.random() * 6, // 9-15pt — a real range now (was a near-flat 11-13)
+      naturalY: +el.getAttribute('y'), // the markup's own value, untouched by any floor clamp —
+                                        // enforceStarFloor (below) always recomputes from this,
+                                        // never from the possibly-already-clamped current s.y, so
+                                        // a later, more accurate floor can restore a star that an
+                                        // earlier (too-early/too-low) floor calc had wrongly pulled down
+      // Each star's font-size is baked into the markup (randomized once at generation time, not
+      // magnitude-based anymore) rather than randomized fresh on every page load — keeps a given
+      // star's size consistent across visits instead of reshuffling every time. Falls back to a
+      // fresh random value only if a star is ever added to the markup without one set.
+      baseSize: +el.getAttribute('font-size') || (9 + Math.random() * 6),
       phase: Math.random() * Math.PI * 2,
       speed: 0.3 + Math.random() * 0.4
     };
   });
   stars.forEach(s => s.el.setAttribute('font-size', s.baseSize));
 
-  // Push the whole field down so nothing sits closer than 1in to the top of .hero (now the same
-  // edge the nav sits on, since starSvg went xMidYMin — see the comment up in the markup). One
-  // shared shift applied to every star's y, computed from the real live scale at load, keeps all
-  // the existing spacing between stars intact instead of clamping each one individually (which
-  // would bunch the low-y ones together at a shared floor and ruin the spread). Baked into s.y
-  // itself, once, right here — not reapplied per frame — so every downstream read of s.y (hit
-  // test, drag, render) automatically stays in sync with no special-casing, the same lesson from
-  // the drag-offset bug just above.
-  const starT0 = viewboxTransform(starSvg, 1000, 600, 'meet', 'min');
-  const TOP_MARGIN_PX = 96; // 1in at the CSS-standard 96px/in
-  const topMarginLocal = TOP_MARGIN_PX / starT0.scale;
-  stars.forEach(s => { s.y += topMarginLocal; });
-  // Home position for the return-to-place automation below — captured once, after the margin
-  // shift above, since that shift (not the raw markup coordinate) is each star's real resting spot.
+  // Home position for the return-to-place automation below — each star's markup y is already its
+  // final intended position (an earlier "push everything down 1in from the top" runtime shift was
+  // here too, but that's now redundant with — and was silently double-stacking on top of — the
+  // baked-in y values the current markup already carries, which is what caused a bunch of stars to
+  // all land on the exact same clamped line; removed rather than fixed in place).
   stars.forEach(s => { s.homeX = s.x; s.homeY = s.y; });
 
   gsap.from('.hero-star', { scale: 0, transformOrigin: 'center', stagger: 0.05, delay: 1.0, duration: 0.4, ease: 'back.out(2)' });
@@ -2104,8 +2081,8 @@
     const t = viewboxTransform(starSvg, 1000, 600, 'meet', 'min');
     const floorLocalY = screenToLocal(t, 0, heroSubEl.getBoundingClientRect().top).y;
     stars.forEach(s => {
-      if (s.y > floorLocalY) s.y = floorLocalY;
-      if (s.homeY > floorLocalY) s.homeY = floorLocalY;
+      s.y = Math.min(s.naturalY, floorLocalY);
+      s.homeY = s.y;
     });
   }
   enforceStarFloor();
