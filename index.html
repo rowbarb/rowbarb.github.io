@@ -197,7 +197,7 @@
   .schematic {
     position: absolute;
     /* Above the cursor dot (300), above .starfield (301), and now above .hero-kicker/.hero-title/
-       .hero-sub/.scroll-cue too (302, bumped up so stars can pass behind them) — the arm still
+       .hero-sub too (302, bumped up so stars can pass behind them) — the arm still
        renders in front of the name/copy, same as before this change, just at 303 instead of 302
        so it stays one level above wherever the text now sits. .hero itself doesn't create its own
        stacking context (position: relative with no z-index), so these values are compared
@@ -339,33 +339,6 @@
     user-select: none;
     pointer-events: none;
   }
-
-  .scroll-cue {
-    position: absolute;
-    z-index: 302; /* above .starfield (301) — see .hero-kicker's z-index comment */
-    bottom: 64px;
-    left: clamp(20px, 5vw, 56px);
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    color: var(--paper-dim);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .scroll-cue .bar {
-    width: 1px; height: 28px;
-    background: var(--paper-dim);
-    position: relative;
-    overflow: hidden;
-  }
-  .scroll-cue .bar::after {
-    content: '';
-    position: absolute;
-    top: -100%; left: 0; right: 0; height: 100%;
-    background: var(--accent);
-    animation: scrollbar 1.6s ease-in-out infinite;
-  }
-  @keyframes scrollbar { 50% { top: 100%; } 100% { top: 100%; } }
 
   /* ---------- filler so scroll/lenis is testable ---------- */
   .filler {
@@ -941,7 +914,6 @@
     </svg>
   </div>
 
-  <div class="scroll-cue"><div class="bar"></div><span>scroll</span></div>
 </section>
 
 <section class="stmt-section" id="about">
@@ -2121,6 +2093,24 @@
   // metrics) and again on resize — only affects pieces that haven't been picked up yet.
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeRestingLetters);
   window.addEventListener('resize', placeRestingLetters);
+
+  // Star floor: no star may render below .hero-sub's top divider line (the rule under "I design,
+  // build, and control..."), at any window size. Only pulls down stars that currently exceed the
+  // floor — anything already above it is left exactly where it is. Applied to both s.y and
+  // s.homeY together so the idle "return home" automation never fights this: if only s.y were
+  // clamped, homeY would still point below the line and the automation would keep trying to drag
+  // the star back down across the floor it was just pulled up from.
+  function enforceStarFloor() {
+    const t = viewboxTransform(starSvg, 1000, 600, 'meet', 'min');
+    const floorLocalY = screenToLocal(t, 0, heroSubEl.getBoundingClientRect().top).y;
+    stars.forEach(s => {
+      if (s.y > floorLocalY) s.y = floorLocalY;
+      if (s.homeY > floorLocalY) s.homeY = floorLocalY;
+    });
+  }
+  enforceStarFloor();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(enforceStarFloor);
+  window.addEventListener('resize', enforceStarFloor);
 
   // Rounded-corner polygon path: pull each vertex in along both its adjacent edges by
   // `radius`, then join those pairs with a quadratic curve through the original vertex —
