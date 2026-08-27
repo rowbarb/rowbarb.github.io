@@ -299,18 +299,26 @@
     clip-path: url(#jointsClip);
   }
 
-  /* Static diagram caption — link lengths / DOF / solve method. Anchored bottom-right of the
-     arm's own viewBox (opposite corner from the base pivot at x=70, the side the arm swings
-     into least often) so it reads as an annotation of this specific schematic, not part of the
-     personal spec-block under the name. Never touched per-frame — it's constant data, not a
-     live readout like the joint labels. */
-  .arm-spec {
+  /* Diagram readout — link lengths / live R,D / state. Used to live inside the arm's own SVG
+     viewBox, anchored to its bottom-right corner — but that ties its screen position to wherever
+     the (small, variously-sized) arm box happens to render, which is what put it awkwardly close
+     to the arm itself. Independent absolutely-positioned box instead, placed by percentage of
+     .hero directly (not tied to any SVG viewBox math), landing in the open space to the lower
+     right of the arm rather than crowding its corner. Two plain <div> lines instead of SVG <text>
+     — same visual result, but state-color updates use plain CSS (.style.color) instead of an SVG
+     fill attribute, see the JS comment where armStateText's color gets set for why that matters. */
+  .arm-readout {
+    position: absolute;
+    right: 25%;
+    bottom: 22%;
+    z-index: 303; /* same level as .schematic — it's this diagram's caption, not separate content */
     font-family: var(--mono);
     font-size: 9px;
-    fill: var(--paper-dim);
+    color: var(--paper-dim);
     opacity: 0.65;
     letter-spacing: 0.02em;
-    text-anchor: end;
+    text-align: right;
+    pointer-events: none;
   }
 
   .starfield {
@@ -368,6 +376,8 @@
     margin: 0 auto;
   }
   .stmt-section.alt-bg { background: #131210; }
+  #about { padding-top: 100px; } /* moved up slightly from the shared 140px — just this section,
+                                     not .work-section/.cta-section too */
 
   .stmt {
     font-family: var(--display);
@@ -698,48 +708,48 @@
            position:fixed (out of flow), so .hero's own top edge already sits at the true top of
            the viewport — same vertical band as the nav. y=0 here renders flush with the top of
            .hero (and thus close to the nav). -->
-      <!-- Randomly scattered across the box (x: 0-1000 full width, y: 0-580, leaving margin above
-           the dynamic floor that clamps further at runtime against wherever .hero-sub's divider
-           line actually ends up for the current viewport) — not a real sky, just placed for a
-           natural, non-clumped spread (stratified grid-cell + jitter, minimum spacing enforced
-           against every other star). The one exception is the Big Dipper below, kept as the single
-           recognizable shape in the field rather than randomized like the rest. -->
+      <!-- Randomly scattered within a specific box (x: 220-950, y: 0-580) that leaves the left
+           column clear for the name and stays above the dynamic floor (which clamps further at
+           runtime against wherever .hero-sub's divider line actually ends up for the current
+           viewport) — stratified grid-cell + jitter, minimum spacing enforced against every other
+           star. The one exception is the Big Dipper below, kept as the single recognizable shape
+           in the field rather than randomized like the rest. -->
       <!-- Big Dipper (Ursa Major) — the exact shape marked up and approved earlier, kept
            as the one recognizable constellation in an otherwise randomly-scattered field. -->
-      <text class="hero-star" x="498" y="253" font-size="9.4">*</text>
-      <text class="hero-star" x="415" y="285" font-size="13.2">*</text>
-      <text class="hero-star" x="603" y="277" font-size="12.9">*</text>
-      <text class="hero-star" x="690" y="307" font-size="15.0">*</text>
-      <text class="hero-star" x="816" y="323" font-size="13.9">*</text>
-      <text class="hero-star" x="698" y="381" font-size="10.7">*</text>
-      <text class="hero-star" x="782" y="390" font-size="11.3">*</text>
+      <text class="hero-star" x="498" y="253" font-size="14.9">*</text>
+      <text class="hero-star" x="415" y="285" font-size="13.6">*</text>
+      <text class="hero-star" x="603" y="277" font-size="11.5">*</text>
+      <text class="hero-star" x="690" y="307" font-size="11.3">*</text>
+      <text class="hero-star" x="816" y="323" font-size="11.4">*</text>
+      <text class="hero-star" x="698" y="381" font-size="14.9">*</text>
+      <text class="hero-star" x="782" y="390" font-size="9.0">*</text>
 
-      <!-- Random fill: stratified placement (grid cell + jitter) across the box so it reads
-           as scattered rather than clumped, min. spacing enforced against every star already
-           placed (including the dipper) so nothing sits on top of anything else. -->
-      <text class="hero-star" x="759" y="166" font-size="13.0">*</text>
-      <text class="hero-star" x="306" y="21" font-size="9.1">*</text>
-      <text class="hero-star" x="625" y="41" font-size="11.8">*</text>
-      <text class="hero-star" x="875" y="491" font-size="10.0">*</text>
-      <text class="hero-star" x="228" y="316" font-size="9.7">*</text>
-      <text class="hero-star" x="879" y="413" font-size="9.4">*</text>
-      <text class="hero-star" x="266" y="512" font-size="13.6">*</text>
-      <text class="hero-star" x="89" y="22" font-size="9.8">*</text>
-      <text class="hero-star" x="365" y="382" font-size="10.5">*</text>
-      <text class="hero-star" x="271" y="400" font-size="11.3">*</text>
-      <text class="hero-star" x="895" y="297" font-size="14.2">*</text>
-      <text class="hero-star" x="745" y="274" font-size="9.5">*</text>
-      <text class="hero-star" x="951" y="190" font-size="11.7">*</text>
-      <text class="hero-star" x="387" y="528" font-size="12.3">*</text>
-      <text class="hero-star" x="740" y="427" font-size="14.3">*</text>
-      <text class="hero-star" x="709" y="521" font-size="13.9">*</text>
-      <text class="hero-star" x="530" y="536" font-size="14.2">*</text>
-      <text class="hero-star" x="281" y="180" font-size="10.7">*</text>
-      <text class="hero-star" x="627" y="159" font-size="11.5">*</text>
-      <text class="hero-star" x="939" y="66" font-size="11.2">*</text>
-      <text class="hero-star" x="593" y="402" font-size="14.3">*</text>
-      <text class="hero-star" x="456" y="210" font-size="14.7">*</text>
-      <text class="hero-star" x="80" y="419" font-size="9.9">*</text>
+      <!-- Random fill, x constrained to 220-950 (excludes the left column where the name
+           sits) — stratified placement (grid cell + jitter), min. spacing enforced against
+           every star already placed (including the dipper) so nothing overlaps. -->
+      <text class="hero-star" x="598" y="433" font-size="14.2">*</text>
+      <text class="hero-star" x="916" y="414" font-size="14.8">*</text>
+      <text class="hero-star" x="905" y="160" font-size="12.6">*</text>
+      <text class="hero-star" x="302" y="381" font-size="15.0">*</text>
+      <text class="hero-star" x="704" y="505" font-size="9.1">*</text>
+      <text class="hero-star" x="388" y="372" font-size="10.1">*</text>
+      <text class="hero-star" x="309" y="50" font-size="15.0">*</text>
+      <text class="hero-star" x="590" y="209" font-size="12.6">*</text>
+      <text class="hero-star" x="250" y="502" font-size="12.5">*</text>
+      <text class="hero-star" x="465" y="291" font-size="9.3">*</text>
+      <text class="hero-star" x="245" y="179" font-size="9.9">*</text>
+      <text class="hero-star" x="253" y="258" font-size="11.6">*</text>
+      <text class="hero-star" x="536" y="305" font-size="9.1">*</text>
+      <text class="hero-star" x="410" y="557" font-size="12.7">*</text>
+      <text class="hero-star" x="539" y="48" font-size="14.0">*</text>
+      <text class="hero-star" x="752" y="51" font-size="11.3">*</text>
+      <text class="hero-star" x="884" y="34" font-size="9.4">*</text>
+      <text class="hero-star" x="457" y="45" font-size="10.3">*</text>
+      <text class="hero-star" x="420" y="135" font-size="12.8">*</text>
+      <text class="hero-star" x="722" y="440" font-size="9.1">*</text>
+      <text class="hero-star" x="694" y="191" font-size="11.2">*</text>
+      <text class="hero-star" x="876" y="305" font-size="12.7">*</text>
+      <text class="hero-star" x="845" y="523" font-size="9.8">*</text>
     </svg>
   </div>
 
@@ -876,19 +886,14 @@
            shape — "held" should always read as yellow, not just whatever sliver intersects. -->
       <text id="heldStarReveal" class="star-reveal" x="70" y="390" opacity="0">*</text>
 
-      <!-- Diagram caption (see .arm-spec above for why this lives here, instead of in the
-           personal spec-block under the name). Top line is pure static identity now — just the
-           three link lengths, matching the L1/L2/L3 constants exactly; no DOF/method text
-           anymore, kept out entirely rather than risk it drifting out of sync with the model
-           again the way "3-DOF" once did. Bottom line is NOT static: it's overwritten every
-           ~120ms in updateArm() with R/D (the real law-of-cosines intermediates) plus a live arm
-           STATE — a separate <tspan>, not just more plain text, because its color changes with
-           the state (see the ARM_STATE_COLORS comment in updateArm() for the four states and why
-           each color was chosen). Starts with an em-dash placeholder so there's no empty flash
-           before the first update lands. -->
-      <text class="arm-spec" x="392" y="401">L1 180 &middot; L2 130 &middot; L3 50</text>
-      <text id="armSpecLive" class="arm-spec" x="392" y="413">R &mdash; &middot; D &mdash; &middot; <tspan id="armStateText">&mdash;</tspan></text>
+      <!-- Diagram caption moved out of this SVG entirely — see .arm-readout in the HTML just below
+           .schematic's closing div, and the CSS comment on .arm-readout for why. -->
     </svg>
+  </div>
+
+  <div class="arm-readout" id="armReadout">
+    <div>L1 180 &middot; L2 130 &middot; L3 50</div>
+    <div id="armSpecLive">R &mdash; &middot; D &mdash; &middot; <span id="armStateText">&mdash;</span></div>
   </div>
 
 </section>
@@ -2443,7 +2448,9 @@
         stateColor = outOfReach ? ARM_STATE_COLORS.outOfReach : ARM_STATE_COLORS.inReach;
       }
       armEl.armStateText.textContent = stateWord;
-      armEl.armStateText.setAttribute('fill', stateColor);
+      armEl.armStateText.style.color = stateColor; // plain HTML span now, not SVG text — CSS
+                                                     // color, not an SVG fill attribute; see the
+                                                     // .arm-readout CSS comment for why it moved
     }
 
     // Below the divider, once there's nothing left to clean up, the desired angles switch straight
