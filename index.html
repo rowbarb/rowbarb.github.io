@@ -367,41 +367,6 @@
   }
   @keyframes scrollbar { 50% { top: 100%; } 100% { top: 100%; } }
 
-  /* ---------- marquee ---------- */
-  .marquee-wrap {
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    padding: 18px 0;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-  .marquee-track {
-    display: inline-flex;
-    align-items: center;
-    gap: 28px; /* even spacing between one skill's hyphen and the next skill's word — see .marquee-track span comment */
-    animation: marquee 26s linear infinite;
-  }
-  .marquee-track span {
-    font-family: var(--display);
-    font-weight: 600;
-    font-size: 1.4rem;
-    color: var(--paper-dim);
-    display: inline-flex;
-    align-items: center;
-    gap: 28px; /* word-to-hyphen spacing, matching .marquee-track's gap so every interval is equal.
-                  No padding here — padding on top of two adjacent gaps was doubling the space
-                  after each hyphen (56px) vs. before it (28px). One gap value, used consistently
-                  at both levels, keeps every word/hyphen interval the same width. */
-  }
-  .marquee-track span::after {
-    content: '—';
-    color: var(--accent);
-  }
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-  }
-
   /* ---------- filler so scroll/lenis is testable ---------- */
   .filler {
     min-height: 70vh;
@@ -771,57 +736,60 @@
            the 2 already-highest, x=80 and x=720, right where they were) — spread across a 0-12
            band instead of a literal "0-7cm" (this SVG's coordinate space is abstract, not tied
            to a physical unit, so that's an approximation, not a conversion). -->
-      <!-- Whole field shifted down as a single rigid group (translate, not per-star edits) so
-           every star keeps its exact position relative to every other star — the Big Dipper
-           shape and the rest of the composition below are untouched, just moved as a block.
+      <!-- Whole field shifted down by +200, baked directly into every star's own y attribute
+           below (not a wrapping <g transform>) — every star keeps its exact position relative to
+           every other star since the same constant was added to each one, so the Big Dipper shape
+           and the rest of the composition are untouched, just moved as a block. A <g transform>
+           was tried first, but the grab/drag hit-test code reads each star's x/y attributes
+           directly and had no way to know about a transform on an ancestor element, so the arm
+           could never actually reach a star even though it looked correctly positioned — baking
+           the offset into the attributes themselves keeps the DOM and the JS model in agreement.
            Was concentrated in the y=0-269 band (top-left corner of a 600-tall field); +200 pulls
            the whole thing down so it's centered in the upper-middle instead of hugging the top,
            genuinely overlapping the hero content's vertical band rather than sitting above it.
            This is safe now that .starfield (z-index 301) renders behind .hero-kicker/.hero-title/
            .hero-sub (bumped to z-index 302, see their rule comments) — stars can pass behind the
            name/copy without visually colliding with it. -->
-      <g transform="translate(0, 200)">
-      <text class="hero-star" x="498" y="53">*</text>
-      <text class="hero-star" x="415" y="85">*</text>
-      <text class="hero-star" x="603" y="77">*</text>
-      <text class="hero-star" x="690" y="107">*</text>
-      <text class="hero-star" x="816" y="123">*</text>
-      <text class="hero-star" x="698" y="181">*</text>
-      <text class="hero-star" x="782" y="190">*</text>
+      <text class="hero-star" x="498" y="253">*</text>
+      <text class="hero-star" x="415" y="285">*</text>
+      <text class="hero-star" x="603" y="277">*</text>
+      <text class="hero-star" x="690" y="307">*</text>
+      <text class="hero-star" x="816" y="323">*</text>
+      <text class="hero-star" x="698" y="381">*</text>
+      <text class="hero-star" x="782" y="390">*</text>
 
       <!-- Everything else: was 24 stars, too dense and all crammed into the top band. Thinned to
            14 (10 deleted) and spread across the full width and a taller y-range so they frame the
            dipper and fill the rest of the field instead of piling on top of it. -->
-      <text class="hero-star" x="40" y="15">*</text>
-      <text class="hero-star" x="170" y="60">*</text>
-      <text class="hero-star" x="300" y="20">*</text>
-      <text class="hero-star" x="60" y="140">*</text>
-      <text class="hero-star" x="220" y="200">*</text>
-      <text class="hero-star" x="350" y="150">*</text>
-      <text class="hero-star" x="469" y="269">*</text>
-      <text class="hero-star" x="890" y="20">*</text>
-      <text class="hero-star" x="950" y="90">*</text>
-      <text class="hero-star" x="870" y="200">*</text>
-      <text class="hero-star" x="960" y="240">*</text>
-      <text class="hero-star" x="451" y="178">*</text>
-      <text class="hero-star" x="597" y="193">*</text>
-      <text class="hero-star" x="651" y="0">*</text>
-      <text class="hero-star" x="900" y="240">*</text>
+      <text class="hero-star" x="40" y="215">*</text>
+      <text class="hero-star" x="170" y="260">*</text>
+      <text class="hero-star" x="300" y="220">*</text>
+      <text class="hero-star" x="60" y="340">*</text>
+      <text class="hero-star" x="220" y="400">*</text>
+      <text class="hero-star" x="350" y="350">*</text>
+      <text class="hero-star" x="469" y="469">*</text>
+      <text class="hero-star" x="890" y="220">*</text>
+      <text class="hero-star" x="950" y="290">*</text>
+      <text class="hero-star" x="870" y="400">*</text>
+      <text class="hero-star" x="960" y="440">*</text>
+      <text class="hero-star" x="451" y="378">*</text>
+      <text class="hero-star" x="597" y="393">*</text>
+      <text class="hero-star" x="651" y="200">*</text>
+      <text class="hero-star" x="900" y="440">*</text>
 
-      <!-- Fill-in batch: originally placed in the arm's right-side operating zone. Now moves
-           down with the rest of the group via the same transform, still in that same relative
-           position within the constellation. -->
-      <text class="hero-star" x="620" y="220">*</text>
-      <text class="hero-star" x="760" y="240">*</text>
-      <text class="hero-star" x="880" y="215">*</text>
-      <text class="hero-star" x="940" y="250">*</text>
-      <text class="hero-star" x="680" y="255">*</text>
-      <text class="hero-star" x="820" y="235">*</text>
-      <text class="hero-star" x="950" y="200">*</text>
-      <text class="hero-star" x="720" y="205">*</text>
-      <text class="hero-star" x="600" y="245">*</text>
-      <text class="hero-star" x="870" y="255">*</text>
-      </g>
+      <!-- Fill-in batch: originally placed in the arm's right-side operating zone, still in that
+           same relative position within the constellation now that the +200 shift is baked
+           directly into every star's y (see the top of this block) instead of a wrapping <g>. -->
+      <text class="hero-star" x="620" y="420">*</text>
+      <text class="hero-star" x="760" y="440">*</text>
+      <text class="hero-star" x="880" y="415">*</text>
+      <text class="hero-star" x="940" y="450">*</text>
+      <text class="hero-star" x="680" y="455">*</text>
+      <text class="hero-star" x="820" y="435">*</text>
+      <text class="hero-star" x="950" y="400">*</text>
+      <text class="hero-star" x="720" y="405">*</text>
+      <text class="hero-star" x="600" y="445">*</text>
+      <text class="hero-star" x="870" y="455">*</text>
     </svg>
   </div>
 
@@ -975,13 +943,6 @@
 
   <div class="scroll-cue"><div class="bar"></div><span>scroll</span></div>
 </section>
-
-<div class="marquee-wrap">
-  <div class="marquee-track" id="marqueeTrack">
-    <span>SOLIDWORKS</span><span>MATLAB</span><span>ARDUINO</span><span>CNC MILLING</span><span>TIG WELDING</span><span>PID TUNING</span><span>ANSYS</span><span>PYTHON</span>
-    <span>SOLIDWORKS</span><span>MATLAB</span><span>ARDUINO</span><span>CNC MILLING</span><span>TIG WELDING</span><span>PID TUNING</span><span>ANSYS</span><span>PYTHON</span>
-  </div>
-</div>
 
 <section class="stmt-section" id="about">
   <p class="index-kicker">01 / ABOUT</p>
