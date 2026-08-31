@@ -6,7 +6,7 @@
 <title>Rowan Barbalich — Mechanical Engineer, Robotics & Control Systems</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Zen+Old+Mincho:wght@900&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -14,13 +14,30 @@
     --bg: #0d0d0b;
     --paper: #f4f1e8;
     --paper-dim: #b9b6ac;
-    --accent: #ff4a1f;
-    --neon-green: #39ff14;
-    --neon-yellow: #f4ff26;
+    --accent: #cacaca; /* was #ff4a1f (orange) — now a neutral light-mid grey, monochrome by
+      request. Every rule using var(--accent) picks this up automatically; only the handful of
+      places that couldn't use the CSS variable (raw SVG fill attributes, JS color constants —
+      grep "#ff4a1f" if this variable is ever changed again to find those) needed touching
+      separately, see the comments where each of those live. */
+    --neon-green: #39ff14; /* unchanged — this is the cursor's own color, kept as explicitly
+      requested (along with the debug overlay's cyan/magenta, also untouched) */
+    --neon-yellow: #e8e8e8; /* was #f4ff26 (bright yellow) — now a near-white grey, still reads as
+      "revealed/highlighted" (brighter than --accent) without being a saturated color. Used for the
+      star/letter grab-reveal effect, which happens in normal (non-debug) interaction, so this one
+      needed to change even though it's not gated behind "g" the way the actual debug palette is. */
     --line: #2b2a26;
-    --mono: 'IBM Plex Mono', monospace;
-    --sans: 'Inter', sans-serif;
-    --display: 'Bricolage Grotesque', var(--sans);
+    --mono: 'Space Mono', monospace; /* was 'IBM Plex Mono' — Space Mono instead: a deliberately
+      "monospace-first, monospace-only" design (not adapted from an existing proportional face the
+      way most monospace fonts are), with real personality in its letterforms rather than reading
+      as a neutral technical default. */
+    --sans: 'Space Grotesk', sans-serif; /* was 'Inter' — Space Grotesk instead: literally the
+      same designer's proportional companion to Space Mono below (Florian Karsten, based on
+      Colophon Foundry's original), so the two share real visual DNA rather than being picked
+      separately and hoping they look fine together. Distinctive geometric quirks (diagonal
+      terminals, an unusual lowercase 'a') without tipping into illegible or gimmicky. */
+    --display: 'Space Grotesk', var(--sans); /* was 'Bricolage Grotesque' — folded into the same
+      system as --sans now rather than a third, unrelated typeface; weight/size still carry the
+      visual distinction between body text and display headings, not a different font choice */
   }
 
   html, body {
@@ -30,7 +47,7 @@
     height: 100%;
   }
 
-  body { overflow-x: hidden; }
+  body { overflow-x: auto; }
 
   a { color: inherit; text-decoration: none; }
 
@@ -46,7 +63,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 28px clamp(20px, 5vw, 56px);
+    padding: 28px 56px; /* fixed now, was clamp(20px, 5vw, 56px) — nav itself still spans the real
+      viewport (position:fixed;left:0;right:0), not the fixed 1800px canvas, since its links need
+      to stay reachable regardless of horizontal scroll position — but its own padding no longer
+      shifts with window width, for visual consistency with the rest of the now-fixed page. */
     mix-blend-mode: difference;
   }
   .nav-mark {
@@ -93,8 +113,13 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 0 clamp(20px, 5vw, 56px) clamp(140px, 18vh, 200px);
-    max-width: 1800px;
+    padding: 0 56px clamp(140px, 18vh, 200px); /* horizontal fixed now (was clamp(...,5vw,...))
+      — vertical stays vh-based on purpose, height-responsiveness isn't part of what's being fixed
+      here, normal vertical scroll already handles any window height difference gracefully */
+    width: 1800px; /* was max-width — see .filler's comment on why this has to be fixed, not
+      capped. This also makes the star field's own width (it reads .hero's real rendered width
+      live, via getBoundingClientRect()) a true constant now, not something that changes with
+      viewport size the way it used to. */
     margin: 0 auto;
   }
 
@@ -113,11 +138,17 @@
   .hero-title {
     position: relative;
     z-index: 302; /* above .starfield (301) — see .hero-kicker's z-index comment */
-    font-family: var(--display);
-    font-weight: 700;
+    font-family: var(--sans); /* was 'Zen Old Mincho' — now matches .hero-copy ("I design,
+      build, and control...") exactly, since that paragraph never sets its own font-family and
+      just inherits the site base (Space Grotesk, var(--sans)) from html/body. */
+    /* text-transform: lowercase removed — the underlying text is already "Rowan"/"Barbalich"
+       with natural capital R/B; the override was forcing everything lowercase including those */
+    font-weight: 700; /* Space Grotesk's max weight — was 900, but this family only goes to 700 */
     line-height: 0.86;
-    font-size: clamp(2.78rem, 12vw, 9.08rem); /* -5pt (~0.42rem) off both ends of the old 3.2/9.5rem range */
-    letter-spacing: -0.02em;
+    font-size: 4.2rem; /* was 9.08rem — noticeably smaller, per request */
+    letter-spacing: 0.02em; /* was -0.03em — all-caps settings generally read better with a
+      little breathing room between letters instead of tight negative tracking, which was suited
+      to the previous heavy serif/slab treatments, not an all-caps sans at this size */
     overflow: hidden;
     user-select: none; /* purely interactable now, not selectable/highlightable text */
     -webkit-user-drag: none; /* Safari can still start a native drag-the-content gesture even with user-select:none — this is the property that actually stops it */
@@ -204,7 +235,9 @@
        directly against each other, not scoped away from one another. */
     z-index: 303;
     top: 6%;
-    right: clamp(-20px, 3vw, 40px);
+    right: 250px; /* was -170px, moved 300 grid units left (300 * 1.4px/unit = 420px, so
+      -170 + 420 = 250) — net position from the original 40px: 150 units right then 300 units
+      left = 150 units left of where it started */
     /* 55vh cap added alongside the existing 50vw/560px caps: in a short viewport (a docked/
        split-screen browser window, for instance), this box was previously a fixed ~588px tall
        regardless of how little vertical room existed, since only width was ever constrained.
@@ -213,7 +246,10 @@
        — capping height (via width, since the box's proportions are locked to the arm SVG's own
        400:420 aspect ratio) leaves at least ~40% of viewport height free below it for .hero-sub,
        shrinking the whole arm/readout scene together rather than letting it overlap the text. */
-    width: min(50vw, 560px, 55vh);
+    width: min(560px, 55vh); /* dropped the 50vw term (was min(50vw, 560px, 55vh)) — at any
+      viewport wide enough to matter, 50vw was always larger than 560px anyway, so it was never
+      actually the constraining term; this is the same effective value, just without an unused vw
+      dependency. 55vh cap kept: */
     pointer-events: none;
   }
   .schematic svg { width: 100%; height: auto; overflow: visible; }
@@ -268,11 +304,15 @@
   .axis-label {
     font-family: var(--mono);
     font-size: 11px;
-    fill: var(--paper);
+    fill: #ff00e5; /* was var(--paper) (white) — magenta now, matching the rest of the debug palette */
     opacity: 0.9;
     text-anchor: middle;
     dominant-baseline: middle;
+    display: none; /* hidden by default now — only shown in debug mode (see body.debug-mode
+      below), same "g" toggle as the grid/overlay. This also hides the reveal clones
+      (labelQ1Reveal etc.), which share this class. */
   }
+  body.debug-mode .axis-label { display: inline; }
 
   .angle-sector {
     fill: none;
@@ -299,27 +339,10 @@
     clip-path: url(#jointsClip);
   }
 
-  /* Diagram readout — link lengths / live R,D / state. Used to live inside the arm's own SVG
-     viewBox, anchored to its bottom-right corner — but that ties its screen position to wherever
-     the (small, variously-sized) arm box happens to render, which is what put it awkwardly close
-     to the arm itself. Independent absolutely-positioned box instead, placed by percentage of
-     .hero directly (not tied to any SVG viewBox math), landing in the open space to the lower
-     right of the arm rather than crowding its corner. Two plain <div> lines instead of SVG <text>
-     — same visual result, but state-color updates use plain CSS (.style.color) instead of an SVG
-     fill attribute, see the JS comment where armStateText's color gets set for why that matters. */
-  .arm-readout {
-    position: absolute;
-    right: 25%;
-    bottom: 22%;
-    z-index: 303; /* same level as .schematic — it's this diagram's caption, not separate content */
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--paper-dim);
-    opacity: 0.65;
-    letter-spacing: 0.02em;
-    text-align: right;
-    pointer-events: none;
-  }
+  /* Diagram readout (link lengths / live R,D / state) used to be its own independently-positioned
+     box here — moved into .spec-block instead (see that markup, right under .hero-copy), as extra
+     dt/dd rows above the existing base/status/grad ones, same fixed text format instead of a
+     separate floating box. No CSS needed here anymore; .spec-block's own rules cover it. */
 
   .starfield {
     position: absolute;
@@ -331,7 +354,10 @@
   .starfield svg { width: 100%; height: 100%; display: block; }
 
   .hero-star {
-    font-family: var(--mono);
+    font-family: 'IBM Plex Mono', monospace; /* was var(--mono) (now Space Mono) — Space Mono's
+      "*" renders with more points than before; IBM Plex Mono (the site's original mono font,
+      pre-overhaul) is back specifically for just this glyph, since that's what it looked like
+      when it read correctly. Rest of the site (nav, labels, spec-block) still uses var(--mono). */
     fill: var(--paper);
     text-anchor: middle;
     dominant-baseline: central;
@@ -341,11 +367,30 @@
 
   /* Debug-only coordinate grid, toggled with "g" (see the keydown listener near the star setup
      JS) — hidden by default so it never appears for an actual visitor. Cyan/magenta so it never
-     reads as real content even mid-toggle. Every line/label is a raw SVG primitive with no
-     styling dependency on anything else on the page, so toggling it can never affect real layout. */
-  .debug-grid { display: none; }
-  .debug-grid.visible { display: block; }
+     reads as real content even mid-toggle. Every line/label is generated fresh by renderDebugGrid()
+     on load/resize (see that function for why it can't be static markup anymore), with no styling
+     dependency on anything else on the page, so toggling it can never affect real layout. A
+     separate SVG from the star field (own element, not drawn inside starSvg), but using the same
+     fixed real-pixel scale and name-anchored origin — this used to be a scale-to-fit viewBox
+     (first "none" to reach every edge, then "meet" for square cells), but neither of those matched
+     the star field once ITS system changed to a fixed scale anchored at the name's base — so the
+     grid now mirrors that exact system instead, via the same starLocalPos() helper every star
+     itself uses, which is what makes the two structurally unable to diverge from each other. */
+  .debug-grid-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 310; /* above everything in .hero (up to .letter-layer's 304) so it's always visible
+                     while calibrating, but below the lightbox (400) since that's a legitimate
+                     full-page-covering state, not something the grid should draw over */
+    pointer-events: none; /* never blocks clicking/dragging stars or letters underneath */
+    display: none;
+  }
+  .debug-grid-svg.visible { display: block; }
   .debug-grid-line { stroke: #00e5ff; stroke-width: 0.5; opacity: 0.35; }
+  .debug-grid-line-minor { stroke: #00e5ff; stroke-width: 0.25; opacity: 0.12; } /* fine 10-unit
+    lines, deliberately fainter than the labeled 100-unit lines so they read as texture, not noise */
   .debug-grid-label {
     font-family: var(--mono);
     font-size: 10px;
@@ -359,9 +404,72 @@
     fill: #ff00e5;
     opacity: 0.9;
   }
+  .debug-hit-circle { fill: none; stroke: #00e5ff; stroke-width: 1; opacity: 0.5; }
+  .debug-home-line { stroke: #ff00e5; stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; }
+  .debug-arm-reach { fill: none; stroke: #00e5ff; stroke-width: 1; stroke-dasharray: 4 4; opacity: 0.4; }
+  .debug-constellation-line { fill: none; stroke: #ff00e5; stroke-width: 1; opacity: 0.55; }
+  .debug-constellation-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    fill: #ff00e5;
+    opacity: 0.85;
+    text-anchor: middle;
+  }
+  /* Highlights every star belonging to a named constellation (Big Dipper's 7, plus Ursa Minor/
+     Cassiopeia/Cepheus/Leo) — cyan, matching the rest of the debug palette — only while debug
+     mode is on. Ordinary stars (no data-constellation) are untouched. */
+  body.debug-mode .hero-star[data-constellation] { fill: #00e5ff; }
+
+  /* Text HUD: automation state + FPS, and the separate mouse-following coordinate readout. Plain
+     HTML (position:fixed), not SVG — hidden by default, toggled with "g" alongside the grid. */
+  .debug-hud {
+    display: none;
+    position: fixed;
+    top: 70px;
+    left: 20px;
+    z-index: 310;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #00e5ff;
+    background: rgba(13, 13, 11, 0.7);
+    padding: 6px 10px;
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    pointer-events: none;
+    line-height: 1.6;
+  }
+  .debug-hud.visible { display: block; }
+  .debug-coord-readout {
+    display: none;
+    position: fixed;
+    z-index: 310;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #ff00e5;
+    background: rgba(13, 13, 11, 0.7);
+    padding: 2px 6px;
+    pointer-events: none;
+    transform: translate(12px, 12px); /* offset from the actual cursor tip, so the label doesn't
+                                          sit directly under the pointer, obscuring itself */
+  }
+  .debug-coord-readout.visible { display: block; }
+
+  .debug-hint {
+    position: absolute;
+    left: 56px; /* was right: 56px — moved to the left side of the page */
+    bottom: 24px;
+    z-index: 302;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--paper-dim);
+    opacity: 0.22; /* deliberately faint — an easter egg, not an announced feature */
+    pointer-events: none;
+  }
+  body.debug-mode .debug-hint { display: none; } /* no reason to keep pointing at "g" once it's
+    already been found and turned on */
 
   .star-reveal {
-    font-family: var(--mono);
+    font-family: 'IBM Plex Mono', monospace; /* matches .hero-star's override above — same glyph,
+      same font, so the reveal clone doesn't visually mismatch the real star underneath it */
     fill: var(--neon-yellow);
     text-anchor: middle;
     dominant-baseline: central;
@@ -374,8 +482,10 @@
     min-height: 70vh;
     display: flex;
     align-items: center;
-    padding: 0 clamp(20px, 5vw, 56px);
-    max-width: 1800px;
+    padding: 0 56px; /* fixed now, was clamp(20px, 5vw, 56px) */
+    width: 1800px; /* was max-width — max-width still allows shrinking on a narrow viewport, which
+      is exactly the reflow behavior being eliminated; a real fixed width doesn't shrink, forcing
+      horizontal scroll instead once the window is narrower than this */
     margin: 0 auto;
     color: var(--paper-dim);
     font-family: var(--mono);
@@ -392,8 +502,10 @@
   }
 
   .stmt-section, .work-section, .cta-section {
-    padding: 140px clamp(20px, 5vw, 56px);
-    max-width: 1800px;
+    padding: 70px 56px; /* was 140px — halved, to bring the numbered sections (01/ABOUT,
+      02/WORK, 03/EXPERIENCE, 04/CONTACT) closer together vertically */
+    width: 1800px; /* was max-width — see .filler's comment on why this has to be a real fixed
+      width, not max-width, for genuinely fixed (not just capped) layout */
     margin: 0 auto;
   }
   .stmt-section.alt-bg { background: #131210; }
@@ -403,7 +515,8 @@
   .stmt {
     font-family: var(--display);
     font-weight: 700;
-    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-size: 3.6rem; /* fixed now, was clamp(2.2rem, 5vw, 3.6rem) — resolved to its own max
+      at any viewport wide enough to matter anyway */
     line-height: 1.15;
     letter-spacing: -0.01em;
     max-width: 1000px;
@@ -413,7 +526,8 @@
   .stmt-huge {
     font-family: var(--display);
     font-weight: 700;
-    font-size: clamp(3.2rem, 9vw, 7rem);
+    font-size: 7rem; /* fixed now, was clamp(3.2rem, 9vw, 7rem) — resolved to its own max at any
+      viewport wide enough to matter anyway */
     line-height: 0.98;
     letter-spacing: -0.02em;
     margin-bottom: 32px;
@@ -450,12 +564,15 @@
     cursor: pointer;
     transition: padding-left 0.2s ease, background 0.2s ease;
   }
-  .work-row:hover { padding-left: 14px; background: rgba(255, 74, 31, 0.05); }
+  .work-row:hover { padding-left: 14px; background: rgba(202, 202, 202, 0.05); } /* was
+    rgba(255, 74, 31, 0.05) — the raw RGB decomposition of the old orange accent hex, another
+    leftover that survived the monochrome pass since it was hardcoded rather than using
+    var(--accent). Same light-grey rgb (202,202,202) as the current --accent, low opacity. */
   .work-num {
     font-family: var(--mono);
     font-size: 0.85rem;
     color: var(--paper-dim);
-    transition: color 0.2s ease;
+    transition: color 0.5s ease; /* was 0.2s — slower fade, matching the new greyscale aesthetic */
   }
   .work-row:hover .work-num { color: var(--accent); }
   .work-name {
@@ -486,7 +603,7 @@
     color: var(--paper-dim);
     text-align: center;
     align-self: start;
-    transition: transform 0.25s ease, color 0.2s ease;
+    transition: transform 0.25s ease, color 0.5s ease; /* color was 0.2s — slower fade */
   }
   .work-row:hover .work-toggle { color: var(--accent); }
   .work-item.open .work-toggle { transform: rotate(45deg); color: var(--accent); }
@@ -512,7 +629,7 @@
     background: #131210;
     align-self: start;
   }
-  .work-detail-media.lightbox-trigger { cursor: pointer; transition: border-color 0.2s ease; }
+  .work-detail-media.lightbox-trigger { cursor: pointer; transition: border-color 0.5s ease; /* was 0.2s — slower fade */ }
   .work-detail-media.lightbox-trigger:hover { border-color: var(--accent); }
   .work-detail-media img { width: 100%; height: auto; display: block; }
   .work-detail-media svg { width: 100%; height: auto; aspect-ratio: 4 / 3; padding: 24px; color: var(--accent); }
@@ -544,7 +661,7 @@
     border-radius: 4px;
     overflow: hidden;
     cursor: pointer;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.5s ease; /* was 0.2s — slower fade */
   }
   .work-gallery button:hover { border-color: var(--accent); }
   .work-gallery img { width: 100%; height: 100%; object-fit: contain; display: block; background: #131210; }
@@ -606,7 +723,7 @@
     border: 1px solid var(--line);
     border-radius: 50%;
     background: rgba(19, 18, 16, 0.8);
-    transition: border-color 0.2s ease, color 0.2s ease;
+    transition: border-color 0.5s ease, color 0.5s ease; /* was 0.2s/0.2s — slower fade */
   }
   .lightbox-close:hover, .lightbox-prev:hover, .lightbox-next:hover { border-color: var(--accent); color: var(--accent); }
   .lightbox-close { top: 28px; right: 28px; width: 40px; height: 40px; font-size: 1.3rem; }
@@ -648,15 +765,19 @@
     transition: all 0.18s ease;
   }
   .btn-primary { background: var(--accent); color: #140600; font-weight: 600; }
-  .btn-primary:hover { background: #ff6a3f; transform: translateY(-1px); }
+  .btn-primary:hover { background: #4a8a3a; transform: translateY(-1px); } /* was #ff6a3f — a
+    real orange leftover missed in the earlier monochrome pass (this was a hardcoded hex, not
+    var(--accent), so it didn't get caught when --accent itself was changed to grey). A muted,
+    desaturated green now, in the same family as the cursor's --neon-green (#39ff14) but toned
+    down for a button background rather than a full-bright neon glow. */
   .btn-outline { border-color: var(--line); color: var(--paper); }
   .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
   .contact-actions { display: flex; gap: 16px; flex-wrap: wrap; }
 
   .site-footer {
     border-top: 1px solid var(--line);
-    padding: 30px clamp(20px, 5vw, 56px);
-    max-width: 1800px;
+    padding: 30px 56px; /* fixed now, was clamp(20px, 5vw, 56px) */
+    width: 1800px; /* was max-width — see .filler's comment on why this has to be fixed, not capped */
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -669,16 +790,11 @@
   }
   .site-footer a:hover { color: var(--accent); }
 
-  @media (max-width: 900px) {
-    .work-detail { grid-template-columns: 1fr; }
-    .work-gallery { grid-template-columns: repeat(2, 1fr); }
-    .work-row { grid-template-columns: 40px 1fr 24px; }
-    .work-meta { display: none; }
-    .manifest-row { grid-template-columns: 1fr; gap: 8px; }
-    .manifest-loc { text-align: left; }
-    .spec-row { grid-template-columns: 1fr; gap: 6px; }
-    .spec-meta { text-align: left; }
-  }
+  /* The @media (max-width: 900px) block that used to live here (collapsing .work-detail to a
+     single column, hiding .work-meta, etc.) is gone on purpose — the whole point of this section
+     becoming fixed-width is that it no longer reflows at narrow viewports at all. A narrow window
+     now shows the same layout as a wide one, just partially off-screen, reachable via horizontal
+     scroll — not a rearranged version of it. */
 </style>
 </head>
 <body id="top">
@@ -716,111 +832,130 @@
       Control Systems. Looking for a team that builds real hardware.
     </p>
     <dl class="spec-block">
-      <dt>base</dt><dd>Hoboken, NJ</dd>
-      <dt>status</dt><dd>open to relocation</dd>
-      <dt>grad</dt><dd>05 / 2026</dd>
+      <dt>arm</dt><dd>L1 180 &middot; L2 130 &middot; L3 50</dd>
+      <dt>state</dt><dd id="armSpecLive">R &mdash; &middot; D &mdash; &middot; <span id="armStateText">&mdash;</span></dd>
     </dl>
   </div>
 
   <div class="starfield" id="starfield">
-    <svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMin meet" id="starSvg">
-      <!-- "meet" (not "slice") so the whole viewBox is always visible, never cropped.
-           preserveAspectRatio is xMidYMin, not xMidYMid: .hero has no top padding and nav is
-           position:fixed (out of flow), so .hero's own top edge already sits at the true top of
-           the viewport — same vertical band as the nav. y=0 here renders flush with the top of
-           .hero (and thus close to the nav). -->
-      <!-- Randomly scattered within a specific box (x: 220-950, y: 0-580) that leaves the left
-           column clear for the name and stays above the dynamic floor (which clamps further at
-           runtime against wherever .hero-sub's divider line actually ends up for the current
-           viewport) — stratified grid-cell + jitter, minimum spacing enforced against every other
-           star. The one exception is the Big Dipper below, kept as the single recognizable shape
-           in the field rather than randomized like the rest. -->
+    <svg viewBox="0 0 1400 600" preserveAspectRatio="xMidYMin meet" id="starSvg">
+      <!-- viewBox/preserveAspectRatio here are just an initial fallback — updateStarViewbox() (see
+           the star setup JS) overwrites the viewBox on load and every resize to exactly match
+           .hero's real pixel size, which is what makes 1 unit = 1 fixed real pixel (via
+           STAR_PX_PER_UNIT) rather than this whole field scaling to fit the window. Each star's
+           actual x/y attribute is written every frame by starLocalPos(), not read directly from
+           the values below — those are just the authored/logical position each star is anchored
+           to relative to the name's base, not literal render coordinates anymore. -->
+      <!-- Randomly scattered within a specific box (x: 308-1330 at the time these were placed —
+           the box's left edge has since moved to 0, so this batch doesn't use the full available
+           width anymore, just hasn't been redistributed into the new space) that leaves the left
+           column clear for the name. y: 0 and up from the anchor — the top of .hero-sub's divider
+           line, right under "...Barbalich." Stratified grid-cell + jitter, minimum spacing
+           enforced against every other star. The one exception is the Big Dipper below, kept as
+           the single recognizable shape in the field rather than randomized like the rest. -->
       <!-- Big Dipper (Ursa Major) — the exact shape marked up and approved earlier, kept
-           as the one recognizable constellation in an otherwise randomly-scattered field. -->
-      <text class="hero-star" x="498" y="253" font-size="14.9">*</text>
-      <text class="hero-star" x="415" y="285" font-size="13.6">*</text>
-      <text class="hero-star" x="603" y="277" font-size="11.5">*</text>
-      <text class="hero-star" x="690" y="307" font-size="11.3">*</text>
-      <text class="hero-star" x="816" y="323" font-size="11.4">*</text>
-      <text class="hero-star" x="698" y="381" font-size="14.9">*</text>
-      <text class="hero-star" x="782" y="390" font-size="9.0">*</text>
+           as the one recognizable constellation in an otherwise randomly-scattered field.
+           data-constellation/data-const-order are read by renderConstellationLines() (see the
+           debug setup JS) to draw connecting lines between these seven specifically, in this
+           order, only when debug mode is on — everything else about these stars (rendering,
+           dragging, grab) is completely unaffected by these two attributes. -->
+      <text class="hero-star" x="697" y="347" font-size="14.9" data-constellation="Ursa Major" data-const-order="1">*</text>
+      <text class="hero-star" x="581" y="315" font-size="13.6" data-constellation="Ursa Major" data-const-order="0">*</text>
+      <text class="hero-star" x="844" y="323" font-size="11.5" data-constellation="Ursa Major" data-const-order="2">*</text>
+      <text class="hero-star" x="966" y="293" font-size="11.3" data-constellation="Ursa Major" data-const-order="3">*</text>
+      <text class="hero-star" x="1142" y="277" font-size="11.4" data-constellation="Ursa Major" data-const-order="6">*</text>
+      <text class="hero-star" x="977" y="219" font-size="14.9" data-constellation="Ursa Major" data-const-order="4">*</text>
+      <text class="hero-star" x="1095" y="210" font-size="9.0" data-constellation="Ursa Major" data-const-order="5">*</text>
 
-      <!-- Random fill, x constrained to 220-950 (excludes the left column where the name
-           sits) — stratified placement (grid cell + jitter), min. spacing enforced against
-           every star already placed (including the dipper) so nothing overlaps. -->
-      <text class="hero-star" x="598" y="433" font-size="14.2">*</text>
-      <text class="hero-star" x="916" y="414" font-size="14.8">*</text>
-      <text class="hero-star" x="905" y="160" font-size="12.6">*</text>
-      <text class="hero-star" x="302" y="381" font-size="15.0">*</text>
-      <text class="hero-star" x="704" y="505" font-size="9.1">*</text>
-      <text class="hero-star" x="388" y="372" font-size="10.1">*</text>
-      <text class="hero-star" x="309" y="50" font-size="15.0">*</text>
-      <text class="hero-star" x="590" y="209" font-size="12.6">*</text>
-      <text class="hero-star" x="250" y="502" font-size="12.5">*</text>
-      <text class="hero-star" x="465" y="291" font-size="9.3">*</text>
-      <text class="hero-star" x="245" y="179" font-size="9.9">*</text>
-      <text class="hero-star" x="253" y="258" font-size="11.6">*</text>
-      <text class="hero-star" x="536" y="305" font-size="9.1">*</text>
-      <text class="hero-star" x="410" y="557" font-size="12.7">*</text>
-      <text class="hero-star" x="539" y="48" font-size="14.0">*</text>
-      <text class="hero-star" x="752" y="51" font-size="11.3">*</text>
-      <text class="hero-star" x="884" y="34" font-size="9.4">*</text>
-      <text class="hero-star" x="457" y="45" font-size="10.3">*</text>
-      <text class="hero-star" x="420" y="135" font-size="12.8">*</text>
-      <text class="hero-star" x="722" y="440" font-size="9.1">*</text>
-      <text class="hero-star" x="694" y="191" font-size="11.2">*</text>
-      <text class="hero-star" x="876" y="305" font-size="12.7">*</text>
-      <text class="hero-star" x="845" y="523" font-size="9.8">*</text>
-      <!-- Debug grid overlay: same viewBox as the stars (0-1000 x, 0-600 y), so gridlines
-           line up exactly with real star coordinates. Hidden by default (.debug-grid has
-           display:none) — press "g" to toggle (see the keydown listener near the star setup
-           code). Cyan/magenta on purpose: nothing else on the page uses these colors, so it
-           always reads as "this is a tool overlay," never mistaken for real content. -->
-      <g class="debug-grid visible" id="debugGrid">
-        <line x1="0" y1="0" x2="0" y2="600" class="debug-grid-line"/>
-        <text x="4" y="14" class="debug-grid-label">0</text>
-        <line x1="100" y1="0" x2="100" y2="600" class="debug-grid-line"/>
-        <text x="104" y="14" class="debug-grid-label">100</text>
-        <line x1="200" y1="0" x2="200" y2="600" class="debug-grid-line"/>
-        <text x="204" y="14" class="debug-grid-label">200</text>
-        <line x1="300" y1="0" x2="300" y2="600" class="debug-grid-line"/>
-        <text x="304" y="14" class="debug-grid-label">300</text>
-        <line x1="400" y1="0" x2="400" y2="600" class="debug-grid-line"/>
-        <text x="404" y="14" class="debug-grid-label">400</text>
-        <line x1="500" y1="0" x2="500" y2="600" class="debug-grid-line"/>
-        <text x="504" y="14" class="debug-grid-label">500</text>
-        <line x1="600" y1="0" x2="600" y2="600" class="debug-grid-line"/>
-        <text x="604" y="14" class="debug-grid-label">600</text>
-        <line x1="700" y1="0" x2="700" y2="600" class="debug-grid-line"/>
-        <text x="704" y="14" class="debug-grid-label">700</text>
-        <line x1="800" y1="0" x2="800" y2="600" class="debug-grid-line"/>
-        <text x="804" y="14" class="debug-grid-label">800</text>
-        <line x1="900" y1="0" x2="900" y2="600" class="debug-grid-line"/>
-        <text x="904" y="14" class="debug-grid-label">900</text>
-        <line x1="1000" y1="0" x2="1000" y2="600" class="debug-grid-line"/>
-        <text x="1004" y="14" class="debug-grid-label">1000</text>
-        <line x1="0" y1="0" x2="1000" y2="0" class="debug-grid-line"/>
-        <text x="4" y="14" class="debug-grid-label">0</text>
-        <line x1="0" y1="100" x2="1000" y2="100" class="debug-grid-line"/>
-        <text x="4" y="96" class="debug-grid-label">100</text>
-        <line x1="0" y1="200" x2="1000" y2="200" class="debug-grid-line"/>
-        <text x="4" y="196" class="debug-grid-label">200</text>
-        <line x1="0" y1="300" x2="1000" y2="300" class="debug-grid-line"/>
-        <text x="4" y="296" class="debug-grid-label">300</text>
-        <line x1="0" y1="400" x2="1000" y2="400" class="debug-grid-line"/>
-        <text x="4" y="396" class="debug-grid-label">400</text>
-        <line x1="0" y1="500" x2="1000" y2="500" class="debug-grid-line"/>
-        <text x="4" y="496" class="debug-grid-label">500</text>
-        <line x1="0" y1="600" x2="1000" y2="600" class="debug-grid-line"/>
-        <text x="4" y="596" class="debug-grid-label">600</text>
-        <line x1="220" y1="0" x2="220" y2="600" class="debug-grid-highlight"/>
-        <text x="224" y="590" class="debug-grid-highlight-label">x=220 (box left edge)</text>
-        <line x1="950" y1="0" x2="950" y2="600" class="debug-grid-highlight"/>
-        <text x="946" y="590" class="debug-grid-highlight-label" text-anchor="end">x=950 (box right edge)</text>
-      </g>
+      <!-- Random fill, x constrained to 308-1330 at the time these were placed (the box's left
+           edge has since moved to 0) — stratified placement (grid cell + jitter), min. spacing
+           enforced against every star already placed (including the dipper) so nothing overlaps. -->
+      <text class="hero-star" x="837" y="167" font-size="14.2">*</text>
+      <text class="hero-star" x="1230" y="186" font-size="14.8">*</text>
+      <text class="hero-star" x="1215" y="440" font-size="12.6">*</text>
+      <text class="hero-star" x="423" y="219" font-size="15.0">*</text>
+      <text class="hero-star" x="986" y="95" font-size="9.1">*</text>
+      <text class="hero-star" x="543" y="228" font-size="10.1">*</text>
+      <text class="hero-star" x="433" y="550" font-size="15.0">*</text>
+      <text class="hero-star" x="826" y="391" font-size="12.6">*</text>
+      <text class="hero-star" x="350" y="98" font-size="12.5">*</text>
+      <text class="hero-star" x="651" y="309" font-size="9.3">*</text>
+      <text class="hero-star" x="343" y="421" font-size="9.9">*</text>
+      <text class="hero-star" x="354" y="342" font-size="11.6">*</text>
+      <text class="hero-star" x="750" y="295" font-size="9.1">*</text>
+      <text class="hero-star" x="574" y="43" font-size="12.7">*</text>
+      <text class="hero-star" x="755" y="552" font-size="14.0">*</text>
+      <text class="hero-star" x="1053" y="549" font-size="11.3">*</text>
+      <text class="hero-star" x="1238" y="566" font-size="9.4">*</text>
+      <text class="hero-star" x="640" y="555" font-size="10.3">*</text>
+      <text class="hero-star" x="588" y="465" font-size="12.8">*</text>
+      <text class="hero-star" x="1011" y="160" font-size="9.1">*</text>
+      <text class="hero-star" x="972" y="409" font-size="11.2">*</text>
+      <text class="hero-star" x="1226" y="295" font-size="12.7">*</text>
+      <text class="hero-star" x="1183" y="77" font-size="9.8">*</text>
+
+      <!-- 8 stars, evenly distributed across x:0-300, y:0-600 — a 2-column x 4-row grid, each star
+           centered in its own 150x150 cell (columns at x=75/225, rows at y=75/225/375/525), not
+           randomized like the rest of the field. -->
+      <text class="hero-star" x="75" y="75" font-size="11.5">*</text>
+      <text class="hero-star" x="225" y="75" font-size="12.0">*</text>
+      <text class="hero-star" x="75" y="250" font-size="10.8">*</text>
+      <text class="hero-star" x="225" y="250" font-size="13.2">*</text>
+      <text class="hero-star" x="75" y="375" font-size="11.0">*</text>
+      <text class="hero-star" x="225" y="375" font-size="12.5">*</text>
+      <text class="hero-star" x="75" y="525" font-size="10.5">*</text>
+      <text class="hero-star" x="225" y="525" font-size="11.8">*</text>
+
+      <!-- Ursa Minor -->
+      <text class="hero-star" x="50" y="300" font-size="12.8" data-constellation="Ursa Minor" data-const-order="0">*</text>
+      <text class="hero-star" x="70" y="315" font-size="9.2" data-constellation="Ursa Minor" data-const-order="1">*</text>
+      <text class="hero-star" x="85" y="335" font-size="10.7" data-constellation="Ursa Minor" data-const-order="2">*</text>
+      <text class="hero-star" x="100" y="355" font-size="10.3" data-constellation="Ursa Minor" data-const-order="3">*</text>
+      <text class="hero-star" x="120" y="345" font-size="13.4" data-constellation="Ursa Minor" data-const-order="4">*</text>
+      <text class="hero-star" x="135" y="360" font-size="13.1" data-constellation="Ursa Minor" data-const-order="5">*</text>
+      <text class="hero-star" x="115" y="375" font-size="14.4" data-constellation="Ursa Minor" data-const-order="6">*</text>
+
+      <!-- Cassiopeia -->
+      <text class="hero-star" x="280" y="440" font-size="9.5" data-constellation="Cassiopeia" data-const-order="0">*</text>
+      <text class="hero-star" x="315" y="430" font-size="11.5" data-constellation="Cassiopeia" data-const-order="1">*</text>
+      <text class="hero-star" x="350" y="455" font-size="9.2" data-constellation="Cassiopeia" data-const-order="2">*</text>
+      <text class="hero-star" x="385" y="435" font-size="10.3" data-constellation="Cassiopeia" data-const-order="3">*</text>
+      <text class="hero-star" x="420" y="450" font-size="12.0" data-constellation="Cassiopeia" data-const-order="4">*</text>
+
+      <!-- Cepheus -->
+      <text class="hero-star" x="430" y="180" font-size="9.2" data-constellation="Cepheus" data-const-order="0">*</text>
+      <text class="hero-star" x="400" y="220" font-size="10.2" data-constellation="Cepheus" data-const-order="1">*</text>
+      <text class="hero-star" x="415" y="260" font-size="12.9" data-constellation="Cepheus" data-const-order="2">*</text>
+      <text class="hero-star" x="445" y="260" font-size="12.3" data-constellation="Cepheus" data-const-order="3">*</text>
+      <text class="hero-star" x="460" y="220" font-size="10.3" data-constellation="Cepheus" data-const-order="4">*</text>
+
+      <!-- Leo -->
+      <text class="hero-star" x="950" y="420" font-size="14.0" data-constellation="Leo" data-const-order="0">*</text>
+      <text class="hero-star" x="955" y="445" font-size="9.8" data-constellation="Leo" data-const-order="1">*</text>
+      <text class="hero-star" x="970" y="465" font-size="11.5" data-constellation="Leo" data-const-order="2">*</text>
+      <text class="hero-star" x="965" y="485" font-size="10.2" data-constellation="Leo" data-const-order="3">*</text>
+      <text class="hero-star" x="950" y="498" font-size="9.5" data-constellation="Leo" data-const-order="4">*</text>
+      <text class="hero-star" x="935" y="490" font-size="10.8" data-constellation="Leo" data-const-order="5">*</text>
+      <text class="hero-star" x="1025" y="475" font-size="12.4" data-constellation="Leo" data-const-order="6">*</text>
+      <text class="hero-star" x="1020" y="440" font-size="9.6" data-constellation="Leo" data-const-order="7">*</text>
+      <text class="hero-star" x="1080" y="455" font-size="13.6" data-constellation="Leo" data-const-order="8">*</text>
     </svg>
   </div>
 
+  <!-- Debug grid — now generated entirely by JS (renderDebugGrid, called on load/resize), not
+       static markup. It has to be: the grid is anchored the same way stars now are (fixed real-
+       pixel scale, origin at the name's base), which depends on live layout measurement, not a
+       fixed viewBox that a static SVG could hardcode. Restricted to the box itself (x: 0-1330)
+       rather than the old full 0-1400 field, so the magenta highlight lines ARE the grid's own
+       left/right edges by construction, not markers drawn somewhere inside a wider field. -->
+  <svg class="debug-grid-svg" id="debugGridSvg"></svg>
+  <!-- Second, separate debug SVG from the grid above — the grid gets entirely wiped and redrawn by
+       renderDebugGrid() on every resize, which would destroy anything per-frame or per-star
+       (mouse-following readout, hit-radius circles, home/current lines) if they lived there too.
+       This one holds elements created ONCE at setup and only ever attribute-updated afterward. Same
+       viewBox convention as starSvg (synced to .hero's real size — see updateDebugOverlayViewbox),
+       so anything already computed in hero-relative pixels elsewhere in the code drops in directly. -->
+  <svg class="debug-grid-svg" id="debugOverlaySvg"></svg>
   <div class="schematic" id="schematic">
     <svg viewBox="0 0 400 420" id="armSvg">
       <defs>
@@ -828,7 +963,7 @@
              point) — this only changes the marker's own shape, not .axis-line's stroke-width, so
              the stem stays exactly as thick as it was; only the head at the tip gets thinner. -->
         <marker id="arrowAccent" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-          <path d="M0,1.5 L6,3 L0,4.5 Z" fill="#ff4a1f" />
+          <path d="M0,1.5 L6,3 L0,4.5 Z" fill="#cacaca" />
         </marker>
         <marker id="arrowPaper" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
           <path d="M0,1.5 L6,3 L0,4.5 Z" fill="#b9b6ac" />
@@ -937,7 +1072,7 @@
 
       <!-- End-effector: plain flat-fill circle, no gradient/highlight/gooey shape — just the
            existing size/color change on grip (see blobRadius/blobColorAmt in updateArm()). -->
-      <ellipse id="gripBlob" class="grip-blob" cx="70" cy="390" rx="8" ry="8" fill="#ff4a1f" />
+      <ellipse id="gripBlob" class="grip-blob" cx="70" cy="390" rx="8" ry="8" fill="#7a7a7a" />
 
       <!-- 8 small satellite spheres orbiting the main end-effector. Built once below (buildOrbitSpheres),
            each just a plain flat-fill circle — JS updates their cx/cy every frame from the main
@@ -954,15 +1089,26 @@
            shape — "held" should always read as yellow, not just whatever sliver intersects. -->
       <text id="heldStarReveal" class="star-reveal" x="70" y="390" opacity="0">*</text>
 
-      <!-- Diagram caption moved out of this SVG entirely — see .arm-readout in the HTML just below
-           .schematic's closing div, and the CSS comment on .arm-readout for why. -->
+      <!-- Diagram caption moved out of this SVG entirely — now lives in .spec-block (right under
+           .hero-copy), as extra dt/dd rows above base/status/grad. See that markup and the
+           comment on .spec-block's CSS. -->
     </svg>
   </div>
 
-  <div class="arm-readout" id="armReadout">
-    <div>L1 180 &middot; L2 130 &middot; L3 50</div>
-    <div id="armSpecLive">R &mdash; &middot; D &mdash; &middot; <span id="armStateText">&mdash;</span></div>
+  <!-- Debug-only text readouts — hidden by default, shown/hidden together with the grid (same "g"
+       toggle, same .debug-grid-svg-style visibility class). Plain HTML rather than SVG, since
+       nothing here needs to align with the star/arm coordinate systems the way circles and lines
+       do — it's just text sitting in a fixed spot. -->
+  <div class="debug-hud" id="debugHud">
+    <div id="debugAutoStateText">auto: idle</div>
+    <div id="debugFpsText">fps: &mdash;</div>
   </div>
+  <div class="debug-coord-readout" id="debugCoordReadout"></div>
+
+  <!-- Small, deliberately easy-to-miss hint about the "g" toggle — low opacity on purpose, an
+       easter egg rather than an announced feature. Hidden once debug mode is actually on (no
+       reason to keep pointing at a door someone's already walked through). -->
+  <div class="debug-hint" id="debugHint">press g for more detail</div>
 
 </section>
 
@@ -1750,10 +1896,10 @@
   //   IN REACH     -> --neon-green (already the cursor dot's color — "on target, all good")
   //   OUT OF REACH -> --neon-yellow (already the star/letter hold-highlight color — "at a limit")
   const ARM_STATE_COLORS = {
-    cleanup: '#ff4a1f',
+    cleanup: '#cacaca',
     idle: '#b9b6ac',
     inReach: '#39ff14',
-    outOfReach: '#f4ff26'
+    outOfReach: '#e8e8e8'
   };
 
   // Target line: locked 1:1 to the raw target, no easing on the endpoint at all — tried a light
@@ -1860,6 +2006,12 @@
     // letterbox gap the browser never actually draws, and every hit-test/drag built on it drifts
     // off from what's really on screen (exactly what broke star dragging after starSvg switched
     // to xMidYMin: the browser rendered top-aligned, this function still assumed centered).
+    // Only used for the arm's own 400x420 diagram now — the star field has its own separate,
+    // simpler coordinate system (STAR_PX_PER_UNIT/starAnchorLocal/starLocalPos, see the star setup
+    // JS), a fixed real-pixel scale anchored at the name's base rather than scaled to fit the
+    // window. This function used to serve both (with an optional flipY flag for the star field's
+    // bottom-up y convention at the time), but that's gone now that stars don't go through a
+    // scale-to-fit viewBox at all anymore.
     const rect = svgEl.getBoundingClientRect();
     const scale = mode === 'slice'
       ? Math.max(rect.width / vbW, rect.height / vbH)
@@ -1907,17 +2059,79 @@
   // state, not because they carry velocity anymore, but because automation's arrival checks need
   // "where the blob was as of last frame" before this frame's own update has run yet.
   const starSvg = document.getElementById('starSvg');
+  const heroEl = document.querySelector('.hero'); // moved up from further down in the file — the
+    // new star coordinate helpers just below need it immediately (updateStarViewbox() runs right
+    // at star setup, not later), whereas it used to only be needed once letter-grab setup began.
+
+  // ---------- fixed-scale star coordinate system, anchored at the base of the name ----------
+  // Replaces the old "scale the whole 1400x600 field to fit the window" approach. Now: (0,0) is a
+  // fixed point (the top of .hero-sub's divider line, right under "...Barbalich."), 1 authored
+  // unit is always exactly STAR_PX_PER_UNIT real pixels — never scaled up or down by window size —
+  // and starSvg's own viewBox is kept in sync with .hero's actual rendered size (updateStarViewbox
+  // below), so anything outside the currently-visible window is simply not drawn (SVG's own
+  // default overflow:hidden), rather than being shrunk to fit. This makes "never below the name"
+  // true by construction — the anchor IS the name's base line, and stars are only ever placed at
+  // y>=0 (i.e., at or above it) — instead of a floor clamp that has to be remembered and kept
+  // correct everywhere a star's position might change.
+  const STAR_PX_PER_UNIT = 1.4;
+  const STAR_BOX_X_MAX = 1250; // right edge of the eligible star box, in authored units — shared
+    // by starAnchorLocal (for centering) and renderDebugGrid (for drawing), so the two can never
+    // drift out of sync with each other the way two separately-hardcoded numbers eventually would.
+  const STAR_BOX_Y_MAX = 600; // ceiling — ties in with the y-clamp in enforceStarFloor below.
+  function starAnchorLocal() {
+    // Anchor in hero-relative pixels (i.e., the same space starSvg's own viewBox now uses, since
+    // it's kept 1:1 with .hero's real size) — recomputed fresh on every call, not cached, so it
+    // tracks live layout through every resize or text reflow.
+    // x is centered: the box (0 to STAR_BOX_X_MAX, in authored units) is centered horizontally in
+    // .hero, rather than the old fixed anchor at .hero's own left edge. y stays exactly as before —
+    // the top of .hero-sub's divider line — unaffected by this, so the base of the starfield
+    // doesn't move vertically, only the horizontal centering changes.
+    const heroRect = heroEl.getBoundingClientRect();
+    const subRect = heroSubEl.getBoundingClientRect();
+    const boxWidthPx = STAR_BOX_X_MAX * STAR_PX_PER_UNIT;
+    const xOffset = Math.max(0, (heroRect.width - boxWidthPx) / 2);
+    return { x: xOffset, y: subRect.top - heroRect.top };
+  }
+  function starLocalPos(x, y) {
+    // Authored (x,y) -> hero-relative pixels -> the actual value to write as the star element's
+    // own x/y attribute (since starSvg's viewBox = .hero's real size, these are the same number).
+    // y is negated: authored y counts upward from the anchor, screen/SVG y still counts downward.
+    const a = starAnchorLocal();
+    return { x: a.x + x * STAR_PX_PER_UNIT, y: a.y - y * STAR_PX_PER_UNIT };
+  }
+  function starScreenPos(x, y) {
+    // Authored (x,y) -> absolute screen pixels, for distance/hit-test math against the blob (which
+    // is already in screen pixels via localToScreen(armT, ...)).
+    const heroRect = heroEl.getBoundingClientRect();
+    const p = starLocalPos(x, y);
+    return { x: heroRect.left + p.x, y: heroRect.top + p.y };
+  }
+  function screenToStarUnits(screenX, screenY) {
+    // Inverse of starScreenPos — absolute screen pixels back to authored units, for storing where
+    // a dragged star actually landed.
+    const heroRect = heroEl.getBoundingClientRect();
+    const a = starAnchorLocal();
+    const localX = screenX - heroRect.left, localY = screenY - heroRect.top;
+    return { x: (localX - a.x) / STAR_PX_PER_UNIT, y: (a.y - localY) / STAR_PX_PER_UNIT };
+  }
+  function updateStarViewbox() {
+    const r = heroEl.getBoundingClientRect();
+    starSvg.setAttribute('viewBox', `0 0 ${Math.max(1, r.width)} ${Math.max(1, r.height)}`);
+  }
+
   let blobX = BASE.x, blobY = BASE.y;
   let blobRadius = 8, blobColorAmt = 0;
-  const COLOR_LIGHT = '#ffb385', COLOR_BASE = '#ff4a1f';
+  const COLOR_LIGHT = '#e8e8e8', COLOR_BASE = '#7a7a7a'; // was '#ffb385'/'#ff4a1f' (orange fade) —
+    // now a dark-to-light grey fade instead. lerpColor still does the same smooth blend between
+    // them based on grip state, this just swaps which two colors it's blending.
 
   // Blob size is now derived, not a fixed number: "about half a mm larger than the largest star."
-  // Stars are sized in the starfield SVG's own local units (baseSize 9-15, radius = baseSize/2 —
-  // see the stars.map() below), the blob lives in the arm SVG's separate local units, and both
-  // SVGs get scaled independently to fit their own on-screen box — so the only place these two
-  // sizes are actually comparable is real screen pixels. BLOB_R/BLOB_R_GRIP are recomputed every
-  // frame from the current armT/starT scale factors (a handful of multiplications, not expensive)
-  // rather than hardcoded, so the relationship holds even if the layout/viewport changes.
+  // Stars are sized in the starfield's own fixed-scale coordinate system (baseSize 9-15, radius =
+  // baseSize/2 — see the stars.map() below), the blob lives in the arm SVG's separate local units
+  // and gets scaled to fit its own on-screen box — so the only place these two sizes are actually
+  // comparable is real screen pixels. BLOB_R/BLOB_R_GRIP are recomputed every frame from
+  // STAR_PX_PER_UNIT (fixed) and armT.scale (still fit-to-box, so still live) rather than
+  // hardcoded, so the relationship holds even if the arm's own layout/viewport changes.
   const MAX_STAR_RADIUS_LOCAL = 15 * 0.5; // matches stars' baseSize upper bound (9 + Math.random()*6 -> max 15)
   const HALF_MM_PX = (96 / 25.4) / 2; // ~1.89px — "half a mm" approximated at a standard 96dpi CSS pixel; the
                                        // web has no reliable way to read true physical screen density, so this
@@ -2006,23 +2220,182 @@
   armEl.jointDialWristRing = buildDotRing(armEl.jointDialWrist, 6.5, 10, 0.9);
   armEl.jointDialWristNeedle = addNeedle(armEl.jointDialWrist, 6.5);
 
-  // Debug coordinate grid — currently defaults to visible (has the "visible" class already in the
-  // markup) for calibrating star/box positions against real numbers instead of eyeballing a
-  // screenshot. Press "g" any time to toggle it off (e.g. once you're done calibrating and want to
-  // see the real page without it) or back on.
-  const debugGrid = document.getElementById('debugGrid');
+  // Debug coordinate grid + related overlays — hidden by default, press "g" to toggle on. Also
+  // gates several other debug-only visualizations bundled under the same key: a live coordinate
+  // readout that follows the mouse, the arm's actual reach radius drawn as a circle, grab-radius
+  // circles around every star and letter, home/current position lines for any misplaced star, an
+  // automation state readout, and an FPS counter. All of it is skipped entirely in the render loop
+  // when debugMode is false (not just hidden via CSS), so there's zero runtime cost for a real
+  // visitor — see the `if (debugMode)` guards throughout updateArm() below.
+  const debugGridSvg = document.getElementById('debugGridSvg');
+  const debugOverlaySvg = document.getElementById('debugOverlaySvg');
+  const debugHud = document.getElementById('debugHud');
+  const debugCoordReadout = document.getElementById('debugCoordReadout');
+  const debugAutoStateText = document.getElementById('debugAutoStateText');
+  const debugFpsText = document.getElementById('debugFpsText');
+  let debugMode = false;
+  function setDebugMode(on) {
+    debugMode = on;
+    document.body.classList.toggle('debug-mode', on); // controls the CSS-only .axis-label
+      // visibility toggle (q1/q2/q3 angle text) — everything else debug-related is JS-driven
+      // element toggling, this one's simpler as a pure CSS rule since there's no per-frame
+      // computation involved in just hiding/showing existing text.
+    [debugGridSvg, debugOverlaySvg, debugHud, debugCoordReadout].forEach(el => el.classList.toggle('visible', on));
+    if (on) { renderDebugGrid(); updateDebugOverlayViewbox(); }
+  }
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'g' || e.key === 'G') debugGrid.classList.toggle('visible');
+    if (e.key === 'g' || e.key === 'G') setDebugMode(!debugMode);
   });
+
+  function updateDebugOverlayViewbox() {
+    const r = heroEl.getBoundingClientRect();
+    debugOverlaySvg.setAttribute('viewBox', `0 0 ${Math.max(1, r.width)} ${Math.max(1, r.height)}`);
+  }
+  window.addEventListener('resize', () => { if (debugMode) updateDebugOverlayViewbox(); });
+
+  // Mouse-following coordinate readout — plain CSS position:fixed, so this just tracks raw screen
+  // coordinates directly, no hero-relative conversion needed for its own placement. The displayed
+  // numbers (its content) are in star-units though, via screenToStarUnits.
+  window.addEventListener('mousemove', (e) => {
+    if (!debugMode) return;
+    debugCoordReadout.style.left = e.clientX + 'px';
+    debugCoordReadout.style.top = e.clientY + 'px';
+    const u = screenToStarUnits(e.clientX, e.clientY);
+    debugCoordReadout.textContent = `x=${u.x.toFixed(0)}  y=${u.y.toFixed(0)}`;
+  });
+
+  // Arm reach radius — a single persistent circle (created once here, attribute-updated every
+  // frame in updateArm() below when debugMode is on), centered on the arm's base with radius
+  // L1+L2+L3, drawn in hero-relative pixels on debugOverlaySvg (not armSvg's own local space,
+  // since debugOverlaySvg is what stays untouched by grid regeneration).
+  // Arm reach envelope — the real reachable zone is an ANNULUS (a ring), not a filled circle: the
+  // end-effector segment (L3) always points straight at the target (see the virtualX/virtualY
+  // comment in updateArm() below), so the 2-link solver's own [minR, maxR] = [|L1-L2|, L1+L2]
+  // reach band gets shifted outward by L3 in both directions — outer radius L3+maxR (360, same
+  // number a filled circle would've used), but ALSO an inner radius of L3+minR (100) the arm
+  // structurally can't fold up tight enough to reach inside of. Two circles, not one.
+  const debugArmReachOuter = document.createElementNS(SVG_NS, 'circle');
+  debugArmReachOuter.setAttribute('class', 'debug-arm-reach');
+  debugOverlaySvg.appendChild(debugArmReachOuter);
+  const debugArmReachInner = document.createElementNS(SVG_NS, 'circle');
+  debugArmReachInner.setAttribute('class', 'debug-arm-reach');
+  debugOverlaySvg.appendChild(debugArmReachInner);
+
+  // Clips the reach circles to the grid's own box (x: 0-STAR_BOX_X_MAX, y: 0-STAR_BOX_Y_MAX) —
+  // the reach annulus is centered on the arm's base and can be large enough to extend below the
+  // anchor line (y=0) or past the box's other edges, which reads as "part of the circle floating
+  // outside the grid" since nothing else on the page ever renders out there. The rect's bounds are
+  // recomputed every frame alongside the circles themselves (see updateArm below), so it stays
+  // correct through resizes without needing a separate resize listener.
+  const debugClipPathEl = document.createElementNS(SVG_NS, 'clipPath');
+  debugClipPathEl.setAttribute('id', 'debugBoxClip');
+  const debugClipRect = document.createElementNS(SVG_NS, 'rect');
+  debugClipPathEl.appendChild(debugClipRect);
+  debugOverlaySvg.appendChild(debugClipPathEl);
+  debugArmReachOuter.setAttribute('clip-path', 'url(#debugBoxClip)');
+  debugArmReachInner.setAttribute('clip-path', 'url(#debugBoxClip)');
+
+  // FPS counter — simple rolling average over the last ~20 frames, updated once per frame in
+  // updateArm() below (only when debugMode is on).
+  let debugFrameTimes = [];
+
+  // Keeps starSvg's viewBox synced to .hero's real pixel size — see the STAR_PX_PER_UNIT/
+  // starAnchorLocal comment above for why this matters (it's what makes 1 unit = 1 fixed real
+  // pixel, and what makes anything outside the currently-visible window simply not render).
+  updateStarViewbox();
+  window.addEventListener('resize', updateStarViewbox);
+
+  // Generates the grid from scratch every call (load + resize) rather than static markup — has to
+  // be JS now, since the grid is anchored the exact same way stars are (fixed real-pixel scale,
+  // origin at the name's base via starLocalPos), which depends on live layout measurement a
+  // static SVG can't express. Restricted to the box itself (x: 0-1250, y: 0-600) instead of the
+  // old full 0-1400 field, so the magenta highlight lines are drawn as the grid's own left/right/
+  // top edges — "at the outer bounds of the grid at all times" is true by construction, not
+  // something that has to be kept in sync separately. Uses the same STAR_BOX_X_MAX/STAR_BOX_Y_MAX
+  // constants the real star-clamping logic uses (see enforceStarFloor), not separately-hardcoded
+  // numbers, so the visible box and the actual eligible area can never drift apart.
+  function renderDebugGrid() {
+    const r = heroEl.getBoundingClientRect();
+    debugGridSvg.setAttribute('viewBox', `0 0 ${Math.max(1, r.width)} ${Math.max(1, r.height)}`);
+    while (debugGridSvg.firstChild) debugGridSvg.removeChild(debugGridSvg.firstChild);
+
+    const BOX_X_MIN = 0, BOX_X_MAX = STAR_BOX_X_MAX;
+    const Y_DRAW_MAX = STAR_BOX_Y_MAX; // real ceiling now, not just a generous draw extent —
+      // matches the actual clamp in enforceStarFloor, so nothing ever renders (grid or star)
+      // above this line.
+
+    function addLine(x1, y1, x2, y2, cls) {
+      const el = document.createElementNS(SVG_NS, 'line');
+      el.setAttribute('x1', x1); el.setAttribute('y1', y1);
+      el.setAttribute('x2', x2); el.setAttribute('y2', y2);
+      el.setAttribute('class', cls);
+      debugGridSvg.appendChild(el);
+    }
+    function addLabel(x, y, text, cls, anchor) {
+      const el = document.createElementNS(SVG_NS, 'text');
+      el.setAttribute('x', x); el.setAttribute('y', y);
+      el.setAttribute('class', cls);
+      if (anchor) el.setAttribute('text-anchor', anchor);
+      el.textContent = text;
+      debugGridSvg.appendChild(el);
+    }
+
+    // Vertical lines (constant x, varying y): minor every 10 units, major (labeled, thicker)
+    // every 50. Major labels sit just above y=0 — the anchor/floor line — since that's the one
+    // fixed, meaningful reference point in this system, unlike "the top of the page" which now
+    // varies with window height.
+    for (let x = BOX_X_MIN; x <= BOX_X_MAX; x += 10) {
+      const isMajor = x % 50 === 0;
+      const top = starLocalPos(x, Y_DRAW_MAX), bottom = starLocalPos(x, 0);
+      addLine(top.x, top.y, bottom.x, bottom.y, isMajor ? 'debug-grid-line' : 'debug-grid-line-minor');
+      if (isMajor) addLabel(bottom.x + 4, bottom.y - 6, String(x), 'debug-grid-label');
+    }
+    // Horizontal lines (constant y, varying x): same minor/major split (major now every 50, not
+    // 100). Major labels sit just right of x=0 — the box's own left edge, the other fixed
+    // reference point.
+    for (let y = 0; y <= Y_DRAW_MAX; y += 10) {
+      const isMajor = y % 50 === 0;
+      const left = starLocalPos(BOX_X_MIN, y), right = starLocalPos(BOX_X_MAX, y);
+      addLine(left.x, left.y, right.x, right.y, isMajor ? 'debug-grid-line' : 'debug-grid-line-minor');
+      if (isMajor) addLabel(left.x + 4, left.y - 4, String(y), 'debug-grid-label');
+    }
+
+    // Magenta highlight lines, drawn last (on top): the box's own left/right/top edges —
+    // literally the same lines already drawn above at x=0/1250 and y=600, redrawn in the
+    // highlight style.
+    const leftTop = starLocalPos(BOX_X_MIN, Y_DRAW_MAX), leftBottom = starLocalPos(BOX_X_MIN, 0);
+    const rightTop = starLocalPos(BOX_X_MAX, Y_DRAW_MAX), rightBottom = starLocalPos(BOX_X_MAX, 0);
+    addLine(leftTop.x, leftTop.y, leftBottom.x, leftBottom.y, 'debug-grid-highlight');
+    addLabel(leftBottom.x + 4, leftBottom.y - 20, `x=${BOX_X_MIN} (box left edge)`, 'debug-grid-highlight-label');
+    addLine(rightTop.x, rightTop.y, rightBottom.x, rightBottom.y, 'debug-grid-highlight');
+    addLabel(rightBottom.x - 4, rightBottom.y - 20, `x=${BOX_X_MAX} (box right edge)`, 'debug-grid-highlight-label', 'end');
+    addLine(leftTop.x, leftTop.y, rightTop.x, rightTop.y, 'debug-grid-highlight');
+    addLabel(leftTop.x + 4, leftTop.y + 16, `y=${Y_DRAW_MAX} (ceiling)`, 'debug-grid-highlight-label');
+  }
+  renderDebugGrid();
+  window.addEventListener('resize', renderDebugGrid);
 
   const stars = Array.from(document.querySelectorAll('#starSvg .hero-star')).map(el => {
     const revealEl = document.createElementNS(SVG_NS, 'text');
     revealEl.setAttribute('class', 'star-reveal');
     revealEl.textContent = '*';
     starReveal.appendChild(revealEl);
+    // Debug-only: a circle showing this star's actual grab hit-radius, and a dashed line from its
+    // current position to its home position (only drawn when it's actually been dragged away from
+    // home — see the misplaced-object check in updateArm()). Both created once here, appended to
+    // debugOverlaySvg (not starSvg — see that element's own comment for why it has to be separate
+    // from starSvg/debugGridSvg), attribute-updated every frame only when debugMode is on.
+    const debugHitCircle = document.createElementNS(SVG_NS, 'circle');
+    debugHitCircle.setAttribute('class', 'debug-hit-circle');
+    debugOverlaySvg.appendChild(debugHitCircle);
+    const debugHomeLine = document.createElementNS(SVG_NS, 'line');
+    debugHomeLine.setAttribute('class', 'debug-home-line');
+    debugOverlaySvg.appendChild(debugHomeLine);
     return {
       el,
       revealEl,
+      debugHitCircle,
+      debugHomeLine,
       x: +el.getAttribute('x'),
       y: +el.getAttribute('y'),
       naturalY: +el.getAttribute('y'), // the markup's own value, untouched by any floor clamp —
@@ -2030,10 +2403,10 @@
                                         // never from the possibly-already-clamped current s.y, so
                                         // a later, more accurate floor can restore a star that an
                                         // earlier (too-early/too-low) floor calc had wrongly pulled down
-      // Each star's font-size is baked into the markup (randomized once at generation time, not
-      // magnitude-based anymore) rather than randomized fresh on every page load — keeps a given
-      // star's size consistent across visits instead of reshuffling every time. Falls back to a
-      // fresh random value only if a star is ever added to the markup without one set.
+      // Each star's font-size is baked into the markup (randomized once at generation time) rather
+      // than randomized fresh on every page load — keeps a given star's size consistent across
+      // visits instead of reshuffling every time. Falls back to a fresh random value only if a
+      // star is ever added to the markup without one set.
       baseSize: +el.getAttribute('font-size') || (9 + Math.random() * 6),
       phase: Math.random() * Math.PI * 2,
       speed: 0.3 + Math.random() * 0.4
@@ -2056,7 +2429,6 @@
   // never shifts. No entrance flourish on these — they should just be sitting there, correctly
   // placed, from the very first frame, so finding out they move is something the user discovers
   // rather than something the page announces.
-  const heroEl = document.querySelector('.hero');
   const letterLayer = document.getElementById('letterLayer');
 
   function measureIgnoringTransform(el) {
@@ -2100,8 +2472,15 @@
     clip.appendChild(clone);
     clip.appendChild(reveal);
 
+    // Debug-only: a circle showing this letter's actual grab hit-radius, same idea as stars'
+    // debugHitCircle — created once, appended to debugOverlaySvg, attribute-updated every frame
+    // only when debugMode is on.
+    const debugHitCircle = document.createElementNS(SVG_NS, 'circle');
+    debugHitCircle.setAttribute('class', 'debug-hit-circle');
+    debugOverlaySvg.appendChild(debugHitCircle);
+
     return {
-      sourceEl, lineEl: sourceEl.closest('.line'), clip, el: clone, revealEl: reveal,
+      sourceEl, lineEl: sourceEl.closest('.line'), clip, el: clone, revealEl: reveal, debugHitCircle,
       cx: 0, cy: 0, halfW: 10, halfH: 10, containerOffsetX: 0, containerOffsetY: 0, moved: false,
       homeX: null, homeY: null // filled in by placeRestingLetters below — the automation's "put it back" target
     };
@@ -2153,23 +2532,78 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeRestingLetters);
   window.addEventListener('resize', placeRestingLetters);
 
-  // Star floor: no star may render below .hero-sub's top divider line (the rule under "I design,
-  // build, and control..."), at any window size. Only pulls down stars that currently exceed the
-  // floor — anything already above it is left exactly where it is. Applied to both s.y and
-  // s.homeY together so the idle "return home" automation never fights this: if only s.y were
-  // clamped, homeY would still point below the line and the automation would keep trying to drag
-  // the star back down across the floor it was just pulled up from.
+  // ---------- constellation connector lines (debug-only) ----------
+  // Groups any star tagged with data-constellation (Big Dipper's 7, Ursa Minor's 7, Cassiopeia's 5,
+  // Cepheus's 5, Leo's 9) into ordered arrays of live star objects (not just DOM elements — el's
+  // own x/y attributes only reflect wherever they were last rendered; the `stars` array entries are
+  // what actually update on drag, so pulling from there means a connector line correctly follows a
+  // constellation star if someone drags it).
+  //
+  // Connections are explicit edge lists (pairs of data-const-order indices), not just "connect 0-1-
+  // 2-3... in sequence" — needed for Leo, whose real shape branches (the sickle curve and the body
+  // triangle both meet at Algieba, index 2), which a single sequential chain can't represent without
+  // retracing a line back over itself. A constellation with no entry here just falls back to a
+  // plain sequential chain (defaultChainEdges) — Cassiopeia still just needs that.
+  const CONSTELLATION_EDGES = {
+    'Ursa Major': [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[3,6]], // default chain (0-1-2-3-4-5-6)
+      // plus one extra chord: order3 (966,293) direct to order6 (1142,277, the handle tip) — added
+      // per a hand-drawn annotation matched against real star positions, not part of the default chain
+    'Ursa Minor': [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[3,6]], // default chain (0-1-2-3-4-5-6)
+      // plus one extra chord: order3 (100,355) direct to order6 (115,375) — same idea as Ursa
+      // Major's extra chord above, requested directly by coordinate rather than a hand-drawn
+      // annotation this time
+    Cepheus: [[0,1],[1,2],[2,3],[3,4],[4,0]], // closed pentagon/house
+    Leo: [
+      [0,1],[1,2],[2,3],[3,4],[4,5],   // the sickle: Regulus-Eta-Algieba-Zeta-Mu-Epsilon
+      [2,6],[6,7],[7,8],[8,6]          // body triangle off Algieba: Zosma/Chertan/Denebola
+    ]
+  };
+  function defaultChainEdges(n) {
+    const edges = [];
+    for (let i = 0; i < n - 1; i++) edges.push([i, i + 1]);
+    return edges;
+  }
+
+  const elToStar = new Map(stars.map(s => [s.el, s]));
+  const constellationGroups = {};
+  document.querySelectorAll('#starSvg .hero-star[data-constellation]').forEach(el => {
+    const name = el.dataset.constellation;
+    const order = +el.dataset.constOrder;
+    const starObj = elToStar.get(el);
+    if (!starObj) return;
+    (constellationGroups[name] ||= [])[order] = starObj;
+  });
+
+  // One persistent <path> (not <polyline> — a path can hold several disconnected M/L subpaths,
+  // which is what a branching shape like Leo needs) + one <text> label per constellation, created
+  // once here, position-updated every frame only when debugMode is on.
+  const debugConstellations = Object.entries(constellationGroups).map(([name, starList]) => {
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('class', 'debug-constellation-line');
+    debugOverlaySvg.appendChild(path);
+    const label = document.createElementNS(SVG_NS, 'text');
+    label.setAttribute('class', 'debug-constellation-label');
+    label.textContent = name;
+    debugOverlaySvg.appendChild(label);
+    const edges = CONSTELLATION_EDGES[name] || defaultChainEdges(starList.length);
+    return { name, stars: starList, edges, path, label };
+  });
+
+  // Star floor/ceiling: this used to be a whole dynamic system (recompute .hero-sub's live screen
+  // position, convert to local units, clamp anything past it, redo on every resize) because the
+  // old coordinate system rescaled with the window. Now that stars are anchored directly at the
+  // name's base (y=0) with a fixed real-pixel scale, "never below the name" is true by
+  // construction — a star can only render below the anchor if its own y is negative, which
+  // shouldn't happen from authored data (every star's naturalY is >= 0) but could happen from a
+  // drag. This is just that one safety clamp (plus a matching ceiling at STAR_BOX_Y_MAX), not
+  // layout-dependent, so no resize listener needed.
   function enforceStarFloor() {
-    const t = viewboxTransform(starSvg, 1000, 600, 'meet', 'min');
-    const floorLocalY = screenToLocal(t, 0, heroSubEl.getBoundingClientRect().top).y;
     stars.forEach(s => {
-      s.y = Math.min(s.naturalY, floorLocalY);
+      s.y = Math.min(Math.max(s.naturalY, 0), STAR_BOX_Y_MAX);
       s.homeY = s.y;
     });
   }
   enforceStarFloor();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(enforceStarFloor);
-  window.addEventListener('resize', enforceStarFloor);
 
   // Rounded-corner polygon path: pull each vertex in along both its adjacent edges by
   // `radius`, then join those pairs with a quadratic curve through the original vertex —
@@ -2322,16 +2756,16 @@
 
   // Screen-space position of an automation target, either where it currently is or where it
   // belongs — same two coordinate systems the manual grab code already bridges (stars live in
-  // the starfield's own SVG space, the letter lives in hero-relative CSS pixels).
-  function autoObjScreenPos(type, ref, useHome, starT, heroRect) {
+  // the starfield's own fixed-scale coordinate system, the letter lives in hero-relative CSS pixels).
+  function autoObjScreenPos(type, ref, useHome, heroRect) {
     if (type === 'star') {
-      return localToScreen(starT, useHome ? ref.homeX : ref.x, useHome ? ref.homeY : ref.y);
+      return starScreenPos(useHome ? ref.homeX : ref.x, useHome ? ref.homeY : ref.y);
     }
     return { x: heroRect.left + (useHome ? ref.homeX : ref.cx), y: heroRect.top + (useHome ? ref.homeY : ref.cy) };
   }
 
-  function autoObjRadiusScreen(type, ref, starT) {
-    return type === 'star' ? ref.baseSize * 0.5 * starT.scale : Math.max(ref.halfW, ref.halfH);
+  function autoObjRadiusScreen(type, ref) {
+    return type === 'star' ? ref.baseSize * 0.5 * STAR_PX_PER_UNIT : Math.max(ref.halfW, ref.halfH);
   }
 
   function updateArm() {
@@ -2340,7 +2774,6 @@
     // (below) need them before targetX/targetY exist for this frame. blobX/blobY here are still
     // last frame's settled spring position (this frame's spring step hasn't run yet), which is
     // plenty accurate for "have we arrived" checks — one frame of lag is imperceptible.
-    const starT = viewboxTransform(starSvg, 1000, 600, 'meet', 'min');
     const heroRect = heroEl.getBoundingClientRect();
     const blobScreenPrev = localToScreen(armT, blobX, blobY);
     const blobRadiusScreenPrev = Math.max(blobRadius * armT.scale, 10);
@@ -2357,7 +2790,7 @@
         if (misplaced.length) {
           let nearest = null, nearestDist = Infinity;
           misplaced.forEach(obj => {
-            const p = autoObjScreenPos(obj.type, obj.ref, false, starT, heroRect);
+            const p = autoObjScreenPos(obj.type, obj.ref, false, heroRect);
             const d = Math.hypot(p.x - blobScreenPrev.x, p.y - blobScreenPrev.y);
             if (d < nearestDist) { nearest = obj; nearestDist = d; }
           });
@@ -2365,9 +2798,9 @@
         }
       }
       if (autoState === 'seeking') {
-        const p = autoObjScreenPos(autoTargetType, autoTargetRef, false, starT, heroRect);
+        const p = autoObjScreenPos(autoTargetType, autoTargetRef, false, heroRect);
         const d = Math.hypot(p.x - blobScreenPrev.x, p.y - blobScreenPrev.y);
-        const r = blobRadiusScreenPrev + autoObjRadiusScreen(autoTargetType, autoTargetRef, starT);
+        const r = blobRadiusScreenPrev + autoObjRadiusScreen(autoTargetType, autoTargetRef);
         if (d < r) {
           if (autoTargetType === 'star') {
             heldStar = autoTargetRef;
@@ -2381,9 +2814,9 @@
         }
       }
       if (autoState === 'carrying') {
-        const p = autoObjScreenPos(autoTargetType, autoTargetRef, true, starT, heroRect);
+        const p = autoObjScreenPos(autoTargetType, autoTargetRef, true, heroRect);
         const d = Math.hypot(p.x - blobScreenPrev.x, p.y - blobScreenPrev.y);
-        const r = blobRadiusScreenPrev + autoObjRadiusScreen(autoTargetType, autoTargetRef, starT);
+        const r = blobRadiusScreenPrev + autoObjRadiusScreen(autoTargetType, autoTargetRef);
         if (d < r) {
           // Arrived — snap exactly onto home (removes any residual gap) before releasing, so the
           // held-object drag code further down never gets a chance to leave it a hair off target.
@@ -2418,6 +2851,62 @@
     // use below (BASE.y itself, and BASE.x, are untouched — x doesn't move, and the couple of
     // one-time/idle-only uses of BASE.y at setup are harmless to leave as the original constant).
     const baseY = armBaseApexY;
+
+    // Debug-only: the arm's actual reach envelope, drawn in hero-relative pixels on
+    // debugOverlaySvg. Uses baseY (the real, dynamically-measured base position, just computed
+    // above), not the static BASE.y constant — the two can genuinely differ (BASE.y is only the
+    // original design-time value; baseY tracks the live-rendered triangle apex, which is what
+    // every other per-frame use of the base already switched to, per the comment above). Drawing
+    // this against the static constant was the actual bug — the radii (minR/maxR/L3 math) were
+    // already correct, the circle's center just wasn't where the base really is.
+    if (debugMode) {
+      const baseScreen = localToScreen(armT, BASE.x, baseY);
+      const cx = baseScreen.x - heroRect.left, cy = baseScreen.y - heroRect.top;
+      // minR/maxR here are the exact same 2-link values solveIK computes and the real reach-check
+      // (ikRawR < ikMinR - 0.5 || ikRawR > ikMaxR + 0.5, further down) compares against — not a
+      // separately-hardcoded L1+L2+L3. +/- L3 shifts that band out to the true annulus (see the
+      // comment where these circles are created, near the top of the star/arm setup).
+      const reachMinR = Math.abs(L1 - L2), reachMaxR = L1 + L2;
+      debugArmReachOuter.setAttribute('cx', cx);
+      debugArmReachOuter.setAttribute('cy', cy);
+      debugArmReachOuter.setAttribute('r', (reachMaxR + L3) * armT.scale);
+      debugArmReachInner.setAttribute('cx', cx);
+      debugArmReachInner.setAttribute('cy', cy);
+      debugArmReachInner.setAttribute('r', (reachMinR + L3) * armT.scale);
+
+      // Clip rect bounds — the box's own edges (x: 0-STAR_BOX_X_MAX, y: 0-STAR_BOX_Y_MAX),
+      // converted through starLocalPos the same way every star and the grid itself already are,
+      // so this can never drift out of alignment with what the grid visually shows as the box.
+      const clipTopLeft = starLocalPos(0, STAR_BOX_Y_MAX);
+      const clipBottomRight = starLocalPos(STAR_BOX_X_MAX, 0);
+      debugClipRect.setAttribute('x', clipTopLeft.x);
+      debugClipRect.setAttribute('y', clipTopLeft.y);
+      debugClipRect.setAttribute('width', clipBottomRight.x - clipTopLeft.x);
+      debugClipRect.setAttribute('height', clipBottomRight.y - clipTopLeft.y);
+
+      // Constellation connector lines + labels — each star's CURRENT position (not its original
+      // markup position), so a line correctly follows if one of its stars gets dragged. Lines
+      // disconnect entirely (path cleared) if ANY member star is currently away from its home
+      // position beyond AUTO_HOME_EPS_STAR — the same threshold the misplaced-object automation
+      // already uses elsewhere — and reconnect automatically the moment every member is back home,
+      // whether that's from the user dropping it back or the automation walking it there itself.
+      debugConstellations.forEach(c => {
+        const anyMisplaced = c.stars.some(s => Math.hypot(s.x - s.homeX, s.y - s.homeY) > AUTO_HOME_EPS_STAR);
+        const pts = c.stars.map(s => starLocalPos(s.x, s.y));
+        if (anyMisplaced) {
+          c.path.setAttribute('d', '');
+        } else {
+          const d = c.edges.map(([i, j]) => `M${pts[i].x},${pts[i].y} L${pts[j].x},${pts[j].y}`).join(' ');
+          c.path.setAttribute('d', d);
+        }
+        const top = pts.reduce((a, b) => (b.y < a.y ? b : a)); // pts are pixel coords here (from
+          // starLocalPos), where smaller y is higher on screen — not raw star units, where it's
+          // the opposite
+        c.label.setAttribute('x', top.x);
+        c.label.setAttribute('y', top.y - 14);
+        c.label.style.display = anyMisplaced ? 'none' : '';
+      });
+    }
     armEl.jointBase.setAttribute('cy', baseY);
 
     let targetX, targetY;
@@ -2426,7 +2915,7 @@
       // Aim at the misplaced object itself while closing in, then at its home slot once gripped —
       // the existing held-object drag code (further down) does the actual carrying once heldStar/
       // heldLetter is set, same as it would for a real drag.
-      const p = autoObjScreenPos(autoTargetType, autoTargetRef, autoState === 'carrying', starT, heroRect);
+      const p = autoObjScreenPos(autoTargetType, autoTargetRef, autoState === 'carrying', heroRect);
       targetX = (p.x - armT.offsetX) / armT.scale;
       targetY = (p.y - armT.offsetY) / armT.scale;
     } else if (hasMouse) {
@@ -2525,9 +3014,9 @@
         stateColor = outOfReach ? ARM_STATE_COLORS.outOfReach : ARM_STATE_COLORS.inReach;
       }
       armEl.armStateText.textContent = stateWord;
-      armEl.armStateText.style.color = stateColor; // plain HTML span now, not SVG text — CSS
-                                                     // color, not an SVG fill attribute; see the
-                                                     // .arm-readout CSS comment for why it moved
+      armEl.armStateText.style.color = stateColor; // plain HTML span, not SVG text (it lives in
+                                                     // .spec-block now) — CSS color, not an SVG
+                                                     // fill attribute
     }
 
     // Below the divider, once there's nothing left to clean up, the desired angles switch straight
@@ -2585,8 +3074,10 @@
     // feedback (squeeze + color) a real grab does — it's not a silent teleport-by-proxy. This is
     // a discrete size/color change on grip state, not a physics wobble, so it's kept as-is.
     // BLOB_R derived fresh each frame from the current star/arm scale ratio (see the comment on
-    // MAX_STAR_RADIUS_LOCAL/HALF_MM_PX above) — cheap arithmetic, no lookup/DOM cost.
-    const starToArmScaleForSize = starT.scale / armT.scale;
+    // MAX_STAR_RADIUS_LOCAL/HALF_MM_PX above) — cheap arithmetic, no lookup/DOM cost. Star scale is
+    // now a fixed constant (STAR_PX_PER_UNIT), not a live viewBox-fit computation, but the arm's
+    // own scale (armT.scale) still is, so this ratio still needs recomputing every frame.
+    const starToArmScaleForSize = STAR_PX_PER_UNIT / armT.scale;
     const BLOB_R = (MAX_STAR_RADIUS_LOCAL * starToArmScaleForSize + HALF_MM_PX / armT.scale) * 0.5; // 50% smaller
     const BLOB_R_GRIP = BLOB_R * 1.2; // only a 20% grow on grip
 
@@ -2696,10 +3187,11 @@
     armEl.labelQ3Reveal.setAttribute('x', sectorQ3Info.labelX); armEl.labelQ3Reveal.setAttribute('y', sectorQ3Info.labelY);
 
     // ---------- stars: blob reveals yellow where it covers one, grasp shrinks + drags them ----------
-    // The blob lives in the arm's SVG, the stars live in the full-hero starfield SVG — two
-    // different coordinate spaces — so distance/dragging is done in screen pixels. starT/heroRect
-    // themselves are now computed once, up at the top of the frame (automation needs them before
-    // this point exists) — just the fresh post-spring-update blob position is new here.
+    // The blob lives in the arm's SVG, the stars live in the starfield's own fixed-scale, anchored
+    // coordinate system — two different coordinate spaces — so distance/dragging is done in screen
+    // pixels via starScreenPos()/screenToStarUnits(). heroRect is computed once, up at the top of
+    // the frame (automation needs it before this point exists) — just the fresh post-spring-update
+    // blob position is new here.
     const blobScreen = localToScreen(armT, blobX, blobY);
     // Real border-to-border overlap: blob's own screen radius + each star's own screen
     // radius (from its glyph size), not a fixed fudge factor. A small floor keeps pickup/
@@ -2713,8 +3205,8 @@
     if (isGripping && !heldStar && !heldLetter) {
       let nearest = null, nearestType = null, nearestDist = Infinity;
       stars.forEach(s => {
-        const starScreen = localToScreen(starT, s.x, s.y);
-        const starRadiusScreen = s.baseSize * 0.5 * starT.scale;
+        const starScreen = starScreenPos(s.x, s.y);
+        const starRadiusScreen = s.baseSize * 0.5 * STAR_PX_PER_UNIT;
         const d = Math.hypot(blobScreen.x - starScreen.x, blobScreen.y - starScreen.y);
         if (d < blobRadiusScreen + starRadiusScreen && d < nearestDist) { nearest = s; nearestType = 'star'; nearestDist = d; }
       });
@@ -2743,9 +3235,10 @@
     }
 
     if (heldStar) {
-      const localPos = screenToLocal(starT, blobScreen.x, blobScreen.y);
+      const localPos = screenToStarUnits(blobScreen.x, blobScreen.y);
       heldStar.x = localPos.x;
-      heldStar.y = localPos.y;
+      heldStar.y = Math.min(Math.max(localPos.y, 0), STAR_BOX_Y_MAX); // can't drag a star below the
+        // anchor (the name's base) or above the ceiling
     }
 
     if (heldLetter) {
@@ -2769,22 +3262,35 @@
         const circleY = blobScreen.y - originY;
         l.revealEl.style.clipPath = `circle(${blobRadiusScreen}px at ${circleX}px ${circleY}px)`;
       }
+      // Debug-only: hit-radius circle in hero-relative pixels (l.cx/l.cy already are that space).
+      if (debugMode) {
+        l.debugHitCircle.setAttribute('cx', l.cx);
+        l.debugHitCircle.setAttribute('cy', l.cy);
+        l.debugHitCircle.setAttribute('r', Math.max(l.halfW, l.halfH));
+      }
     });
 
     // Size ratio between the two SVGs' local coordinate systems, so a reveal clone's font-size
-    // (drawn in the arm's local units) still matches the real star's on-screen size.
-    const starToArmScale = starT.scale / armT.scale;
+    // (drawn in the arm's local units) still matches the real star's on-screen size. Star scale is
+    // now the fixed STAR_PX_PER_UNIT constant, not a live viewBox-fit computation.
+    const starToArmScale = STAR_PX_PER_UNIT / armT.scale;
 
     const starTime = performance.now() / 1000;
     stars.forEach(s => {
-      const starScreen = localToScreen(starT, s.x, s.y);
+      const starScreen = starScreenPos(s.x, s.y);
       const fontSize = s.baseSize * (s === heldStar ? 0.75 : 1);
 
       // The real star: always its plain white/paper self, never recolored. It's the ground
       // truth — untouched flicker, untouched color. Whatever's covered by the blob simply
       // won't be visible here, because the opaque blob is painted on top of it.
-      s.el.setAttribute('x', s.x);
-      s.el.setAttribute('y', s.y);
+      // starLocalPos converts the star's authored (x,y) — anchored at the name's base, fixed real-
+      // pixel scale — into hero-relative pixels, which is what starSvg's own viewBox now matches
+      // 1:1 (see updateStarViewbox). This is the one place that has to do that conversion, since
+      // every other read of a star's position goes through starScreenPos/screenToStarUnits rather
+      // than touching the element's own x/y attributes directly.
+      const localPos = starLocalPos(s.x, s.y);
+      s.el.setAttribute('x', localPos.x);
+      s.el.setAttribute('y', localPos.y);
       s.el.setAttribute('font-size', fontSize);
       // Real fade in/out now, not a gentle shimmer — the old range (opacity 0.45-0.9) never let a
       // star get close to invisible, so it read as a subtle brightness wobble rather than an
@@ -2802,6 +3308,26 @@
       s.revealEl.setAttribute('x', armLocal.x);
       s.revealEl.setAttribute('y', armLocal.y);
       s.revealEl.setAttribute('font-size', fontSize * starToArmScale);
+
+      // Debug-only: hit-radius circle + home/current line, both on debugOverlaySvg (hero-relative
+      // pixels — same space localPos is already in, from starLocalPos above). Skipped entirely
+      // when debugMode is off, not just hidden, so there's no per-frame cost for a real visitor.
+      if (debugMode) {
+        s.debugHitCircle.setAttribute('cx', localPos.x);
+        s.debugHitCircle.setAttribute('cy', localPos.y);
+        s.debugHitCircle.setAttribute('r', s.baseSize * 0.5 * STAR_PX_PER_UNIT);
+        const misplaced = Math.hypot(s.x - s.homeX, s.y - s.homeY) > AUTO_HOME_EPS_STAR;
+        if (misplaced) {
+          const homeLocal = starLocalPos(s.homeX, s.homeY);
+          s.debugHomeLine.setAttribute('x1', localPos.x);
+          s.debugHomeLine.setAttribute('y1', localPos.y);
+          s.debugHomeLine.setAttribute('x2', homeLocal.x);
+          s.debugHomeLine.setAttribute('y2', homeLocal.y);
+          s.debugHomeLine.style.display = '';
+        } else {
+          s.debugHomeLine.style.display = 'none';
+        }
+      }
     });
 
     // The gripped star: always fully yellow, unclipped, guaranteed — not dependent on how
@@ -2832,6 +3358,19 @@
     );
     orbitSpheresEl.setAttribute('fill', lerpColor(COLOR_BASE, COLOR_LIGHT, blobColorAmt * 0.5));
     orbitSpheresEl.setAttribute('opacity', emergeAmt.toFixed(2));
+
+    // Debug-only: automation state text + a simple rolling-average FPS counter. Both read off
+    // values that already exist for other reasons (autoState/autoTargetType from the automation
+    // logic above, performance.now() timestamps) rather than tracking anything new just for this.
+    if (debugMode) {
+      const targetDesc = autoTargetType ? ` -> ${autoTargetType}` : '';
+      debugAutoStateText.textContent = `auto: ${autoState}${targetDesc}`;
+
+      const now = performance.now();
+      debugFrameTimes.push(now);
+      while (debugFrameTimes.length && debugFrameTimes[0] < now - 1000) debugFrameTimes.shift();
+      debugFpsText.textContent = `fps: ${debugFrameTimes.length}`;
+    }
 
     requestAnimationFrame(updateArm);
   }
