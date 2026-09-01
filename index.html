@@ -145,7 +145,7 @@
        with natural capital R/B; the override was forcing everything lowercase including those */
     font-weight: 700; /* Space Grotesk's max weight — was 900, but this family only goes to 700 */
     line-height: 0.86;
-    font-size: 4.2rem; /* was 9.08rem — noticeably smaller, per request */
+    font-size: 4.7rem; /* was 4.2rem, increased 0.5rem per request */
     letter-spacing: 0.02em; /* was -0.03em — all-caps settings generally read better with a
       little breathing room between letters instead of tight negative tracking, which was suited
       to the previous heavy serif/slab treatments, not an all-caps sans at this size */
@@ -832,7 +832,7 @@
       Control Systems. Looking for a team that builds real hardware.
     </p>
     <dl class="spec-block">
-      <dt>arm</dt><dd>L1 180 &middot; L2 130 &middot; L3 50</dd>
+      <dt>arm</dt><dd>L1 270 &middot; L2 195 &middot; L3 75</dd>
       <dt>state</dt><dd id="armSpecLive">R &mdash; &middot; D &mdash; &middot; <span id="armStateText">&mdash;</span></dd>
     </dl>
   </div>
@@ -1861,9 +1861,14 @@
 
   const armSvg = document.getElementById('armSvg');
   const BASE = { x: 70, y: 390 };
-  const L1 = 180; // upper arm (grey)
-  const L2 = 130; // forearm (grey)
-  const L3 = 50; // wrist / end-effector reach (orange) — matches the caption's L1/L2/L3 line exactly
+  const L1 = 270; // upper arm (grey) — was 180, increased 50% so the end-effector can reach the
+    // "h" in the name; couldn't get a live pixel measurement to size this precisely (browser tool
+    // couldn't reach either localhost or a file:// URL to measure), so this is a generous estimate
+    // rather than an exact fit — check with "g" + the coordinate readout and tell me if it needs
+    // more/less
+  const L2 = 195; // forearm (grey) — was 130, same 50% increase
+  const L3 = 75; // wrist / end-effector reach (orange) — was 50, same 50% increase — matches the
+    // caption's L1/L2/L3 line exactly
 
   // ---------- automation: rest pose when the cursor drops below the name/description divider ----------
   // .hero-sub's own top border is "that faint grey line" — reusing it directly instead of a
