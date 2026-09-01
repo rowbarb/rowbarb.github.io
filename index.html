@@ -939,6 +939,30 @@
       <text class="hero-star" x="1025" y="475" font-size="12.4" data-constellation="Leo" data-const-order="6">*</text>
       <text class="hero-star" x="1020" y="440" font-size="9.6" data-constellation="Leo" data-const-order="7">*</text>
       <text class="hero-star" x="1080" y="455" font-size="13.6" data-constellation="Leo" data-const-order="8">*</text>
+
+      <!-- Top strip fill (y: 600-900, the ceiling extension) — same stratified
+           grid-cell + jitter placement as the rest of the random field. -->
+      <text class="hero-star" x="662" y="770" font-size="11.4">*</text>
+      <text class="hero-star" x="130" y="675" font-size="14.4">*</text>
+      <text class="hero-star" x="768" y="847" font-size="14.8">*</text>
+      <text class="hero-star" x="942" y="855" font-size="12.8">*</text>
+      <text class="hero-star" x="930" y="665" font-size="11.7">*</text>
+      <text class="hero-star" x="290" y="621" font-size="12.3">*</text>
+      <text class="hero-star" x="602" y="818" font-size="14.0">*</text>
+      <text class="hero-star" x="811" y="745" font-size="9.8">*</text>
+      <text class="hero-star" x="608" y="680" font-size="14.6">*</text>
+      <text class="hero-star" x="394" y="851" font-size="11.9">*</text>
+      <text class="hero-star" x="1123" y="647" font-size="9.3">*</text>
+      <text class="hero-star" x="212" y="724" font-size="13.4">*</text>
+      <text class="hero-star" x="146" y="765" font-size="13.3">*</text>
+      <text class="hero-star" x="1192" y="746" font-size="13.7">*</text>
+      <text class="hero-star" x="142" y="827" font-size="9.9">*</text>
+      <text class="hero-star" x="983" y="727" font-size="14.6">*</text>
+      <text class="hero-star" x="398" y="727" font-size="9.7">*</text>
+      <text class="hero-star" x="291" y="844" font-size="9.7">*</text>
+      <text class="hero-star" x="501" y="659" font-size="10.8">*</text>
+      <text class="hero-star" x="1116" y="858" font-size="14.9">*</text>
+      <text class="hero-star" x="789" y="625" font-size="11.5">*</text>
     </svg>
   </div>
 
@@ -2077,7 +2101,8 @@
   const STAR_BOX_X_MAX = 1250; // right edge of the eligible star box, in authored units — shared
     // by starAnchorLocal (for centering) and renderDebugGrid (for drawing), so the two can never
     // drift out of sync with each other the way two separately-hardcoded numbers eventually would.
-  const STAR_BOX_Y_MAX = 600; // ceiling — ties in with the y-clamp in enforceStarFloor below.
+  const STAR_BOX_Y_MAX = 900; // ceiling — was 600, extended by 300 units — ties in with the
+    // y-clamp in enforceStarFloor below.
   function starAnchorLocal() {
     // Anchor in hero-relative pixels (i.e., the same space starSvg's own viewBox now uses, since
     // it's kept 1:1 with .hero's real size) — recomputed fresh on every call, not cached, so it
