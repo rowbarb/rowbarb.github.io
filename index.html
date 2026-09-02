@@ -113,13 +113,15 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 0 56px clamp(140px, 18vh, 200px); /* horizontal fixed now (was clamp(...,5vw,...))
-      — vertical stays vh-based on purpose, height-responsiveness isn't part of what's being fixed
-      here, normal vertical scroll already handles any window height difference gracefully */
-    width: 1800px; /* was max-width — see .filler's comment on why this has to be fixed, not
-      capped. This also makes the star field's own width (it reads .hero's real rendered width
-      live, via getBoundingClientRect()) a true constant now, not something that changes with
-      viewport size the way it used to. */
+    padding: 0 40px clamp(140px, 18vh, 200px); /* horizontal was 56px, now ~40px per the
+      responsive-refinement spec — vertical stays vh-based, unrelated to this change */
+    max-width: 1400px; /* was width: 1800px (fixed, no-shrink) — reverted to a real responsive
+      max-width per the refinement spec, which explicitly requires no horizontal scrolling on
+      mobile/tablet. This directly reverses an earlier explicit request in this same conversation
+      to make the page a fixed 1800px canvas with horizontal scroll instead — flagging that
+      conflict here since both were genuine, deliberate asks. The star field still works
+      correctly either way: it reads .hero's real rendered width live via getBoundingClientRect(),
+      so it adapts automatically now that this shrinks with the viewport again. */
     margin: 0 auto;
   }
 
@@ -482,10 +484,9 @@
     min-height: 70vh;
     display: flex;
     align-items: center;
-    padding: 0 56px; /* fixed now, was clamp(20px, 5vw, 56px) */
-    width: 1800px; /* was max-width — max-width still allows shrinking on a narrow viewport, which
-      is exactly the reflow behavior being eliminated; a real fixed width doesn't shrink, forcing
-      horizontal scroll instead once the window is narrower than this */
+    padding: 0 40px; /* was 56px, now ~40px per the responsive-refinement spec */
+    max-width: 1400px; /* was width: 1800px (fixed) — see .hero's comment for the full context
+      on this reverting back to a real responsive container */
     margin: 0 auto;
     color: var(--paper-dim);
     font-family: var(--mono);
@@ -502,10 +503,8 @@
   }
 
   .stmt-section, .work-section, .cta-section {
-    padding: 70px 56px; /* was 140px — halved, to bring the numbered sections (01/ABOUT,
-      02/WORK, 03/EXPERIENCE, 04/CONTACT) closer together vertically */
-    width: 1800px; /* was max-width — see .filler's comment on why this has to be a real fixed
-      width, not max-width, for genuinely fixed (not just capped) layout */
+    padding: 70px 40px; /* horizontal was 56px, now ~40px per the responsive-refinement spec */
+    max-width: 1400px; /* was width: 1800px (fixed) — see .hero's comment for the full context */
     margin: 0 auto;
   }
   .stmt-section.alt-bg { background: #131210; }
@@ -552,6 +551,37 @@
   /* work: numbered index list + hover-swapped preview panel */
   .work-list { border-top: 1px solid var(--line); }
   .work-item { border-bottom: 1px solid var(--line); }
+  .work-section-label {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 48px 0 4px;
+    padding-top: 24px;
+  }
+  .work-section-label:first-child { margin-top: 8px; padding-top: 0; }
+  .work-section-sub {
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    color: var(--paper-dim);
+    margin-bottom: 20px;
+    max-width: 620px;
+  }
+  /* Featured projects get a visibly larger, more dominant row — bigger title, bigger number,
+     more padding — so they read as the primary case studies at a glance, distinct from the
+     compact additional-work list below them. */
+  .work-item.featured .work-row { padding: 30px 4px; }
+  .work-item.featured .work-num { font-size: 1.1rem; }
+  .work-item.featured .work-name { font-size: 1.55rem; font-weight: 700; }
+  .work-item.featured .work-tag { font-size: 0.85rem; margin-top: 6px; }
+  .work-item.featured .work-meta { font-size: 0.85rem; color: var(--accent); }
+  /* Additional work stays visually compact — smaller title, tighter padding — so it reads as
+     supporting breadth rather than competing with the featured case studies above it. */
+  .work-item.additional .work-row { padding: 14px 4px; }
+  .work-item.additional .work-num { font-size: 0.75rem; }
+  .work-item.additional .work-name { font-size: 0.98rem; font-weight: 500; }
+  .work-item.additional .work-tag { font-size: 0.72rem; }
+  .work-item.additional .work-meta { font-size: 0.72rem; }
   .work-row {
     all: unset;
     box-sizing: border-box;
@@ -635,6 +665,41 @@
   .work-detail-media svg { width: 100%; height: auto; aspect-ratio: 4 / 3; padding: 24px; color: var(--accent); }
   .work-detail-copy p { color: var(--paper-dim); line-height: 1.75; font-size: 0.98rem; margin-bottom: 20px; }
   .work-detail-copy em { color: var(--paper); font-style: italic; }
+  /* Quick-scan summary — What/Role/Tech/Result, meant to be readable in ~5-10 seconds before the
+     full detailed paragraph below it. Only used on the 3 featured projects. */
+  .project-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 28px;
+    padding: 20px 22px;
+    margin-bottom: 22px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .project-summary-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--paper-dim);
+    margin-bottom: 5px;
+  }
+  .project-summary-value { font-family: var(--sans); font-size: 0.9rem; color: var(--paper); line-height: 1.45; }
+  .project-metric-callout {
+    grid-column: 1 / -1;
+    font-family: var(--mono);
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--accent);
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+    margin-top: 2px;
+  }
+  /* Compact skill-tag pills — reuses .exp-tag's existing look from the Experience section, for
+     projects (currently just the GC Oven) that need to communicate a wide breadth of disciplines
+     at a glance rather than only in prose. */
+  .project-skill-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+  .project-skill-tags .exp-tag { font-size: 0.72rem; padding: 5px 11px; }
   .work-stats { list-style: none; display: flex; flex-direction: column; gap: 9px; }
   .work-stats li {
     font-family: var(--mono);
@@ -776,8 +841,8 @@
 
   .site-footer {
     border-top: 1px solid var(--line);
-    padding: 30px 56px; /* fixed now, was clamp(20px, 5vw, 56px) */
-    width: 1800px; /* was max-width — see .filler's comment on why this has to be fixed, not capped */
+    padding: 30px 40px; /* horizontal was 56px, now ~40px per the responsive-refinement spec */
+    max-width: 1400px; /* was width: 1800px (fixed) — see .hero's comment for the full context */
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -789,6 +854,22 @@
     color: var(--paper-dim);
   }
   .site-footer a:hover { color: var(--accent); }
+
+  /* Responsive collapse for narrower screens — restored per the refinement spec's explicit
+     requirement that the wider desktop layout must not cause horizontal scrolling on mobile/
+     tablet, and that cards should stack naturally. An equivalent block existed earlier in this
+     file's history and was removed when the page briefly became a fixed-width, horizontal-
+     scrolling canvas; now that it's responsive again, this needs to come back. */
+  @media (max-width: 900px) {
+    .work-detail { grid-template-columns: 1fr; }
+    .work-gallery { grid-template-columns: repeat(2, 1fr); }
+    .work-row { grid-template-columns: 40px 1fr 24px; }
+    .work-meta { display: none; }
+    .manifest-row { grid-template-columns: 1fr; gap: 8px; }
+    .manifest-loc { text-align: left; }
+    .spec-row { grid-template-columns: 1fr; gap: 6px; }
+    .spec-meta { text-align: left; }
+  }
 
   /* The @media (max-width: 900px) block that used to live here (collapsing .work-detail to a
      single column, hiding .work-meta, etc.) is gone on purpose — the whole point of this section
@@ -859,126 +940,126 @@
            debug setup JS) to draw connecting lines between these seven specifically, in this
            order, only when debug mode is on — everything else about these stars (rendering,
            dragging, grab) is completely unaffected by these two attributes. -->
-      <text class="hero-star" x="697" y="347" font-size="14.9" data-constellation="Ursa Major" data-const-order="1">*</text>
-      <text class="hero-star" x="581" y="315" font-size="13.6" data-constellation="Ursa Major" data-const-order="0">*</text>
-      <text class="hero-star" x="844" y="323" font-size="11.5" data-constellation="Ursa Major" data-const-order="2">*</text>
-      <text class="hero-star" x="966" y="293" font-size="11.3" data-constellation="Ursa Major" data-const-order="3">*</text>
-      <text class="hero-star" x="1142" y="277" font-size="11.4" data-constellation="Ursa Major" data-const-order="6">*</text>
-      <text class="hero-star" x="977" y="219" font-size="14.9" data-constellation="Ursa Major" data-const-order="4">*</text>
-      <text class="hero-star" x="1095" y="210" font-size="9.0" data-constellation="Ursa Major" data-const-order="5">*</text>
+      <text class="hero-star" x="697" y="243" font-size="14.9" data-constellation="Ursa Major" data-const-order="1">*</text>
+      <text class="hero-star" x="581" y="220" font-size="13.6" data-constellation="Ursa Major" data-const-order="0">*</text>
+      <text class="hero-star" x="844" y="226" font-size="11.5" data-constellation="Ursa Major" data-const-order="2">*</text>
+      <text class="hero-star" x="966" y="205" font-size="11.3" data-constellation="Ursa Major" data-const-order="3">*</text>
+      <text class="hero-star" x="1142" y="194" font-size="11.4" data-constellation="Ursa Major" data-const-order="6">*</text>
+      <text class="hero-star" x="977" y="153" font-size="14.9" data-constellation="Ursa Major" data-const-order="4">*</text>
+      <text class="hero-star" x="1095" y="147" font-size="9.0" data-constellation="Ursa Major" data-const-order="5">*</text>
 
       <!-- Random fill, x constrained to 308-1330 at the time these were placed (the box's left
            edge has since moved to 0) — stratified placement (grid cell + jitter), min. spacing
            enforced against every star already placed (including the dipper) so nothing overlaps. -->
-      <text class="hero-star" x="837" y="167" font-size="14.2">*</text>
-      <text class="hero-star" x="1230" y="186" font-size="14.8">*</text>
-      <text class="hero-star" x="1215" y="440" font-size="12.6">*</text>
-      <text class="hero-star" x="423" y="219" font-size="15.0">*</text>
-      <text class="hero-star" x="986" y="95" font-size="9.1">*</text>
-      <text class="hero-star" x="543" y="228" font-size="10.1">*</text>
-      <text class="hero-star" x="433" y="550" font-size="15.0">*</text>
-      <text class="hero-star" x="826" y="391" font-size="12.6">*</text>
-      <text class="hero-star" x="350" y="98" font-size="12.5">*</text>
-      <text class="hero-star" x="651" y="309" font-size="9.3">*</text>
-      <text class="hero-star" x="343" y="421" font-size="9.9">*</text>
-      <text class="hero-star" x="354" y="342" font-size="11.6">*</text>
-      <text class="hero-star" x="750" y="295" font-size="9.1">*</text>
-      <text class="hero-star" x="574" y="43" font-size="12.7">*</text>
-      <text class="hero-star" x="755" y="552" font-size="14.0">*</text>
-      <text class="hero-star" x="1053" y="549" font-size="11.3">*</text>
-      <text class="hero-star" x="1238" y="566" font-size="9.4">*</text>
-      <text class="hero-star" x="640" y="555" font-size="10.3">*</text>
-      <text class="hero-star" x="588" y="465" font-size="12.8">*</text>
-      <text class="hero-star" x="1011" y="160" font-size="9.1">*</text>
-      <text class="hero-star" x="972" y="409" font-size="11.2">*</text>
-      <text class="hero-star" x="1226" y="295" font-size="12.7">*</text>
-      <text class="hero-star" x="1183" y="77" font-size="9.8">*</text>
+      <text class="hero-star" x="837" y="117" font-size="14.2">*</text>
+      <text class="hero-star" x="1230" y="130" font-size="14.8">*</text>
+      <text class="hero-star" x="1215" y="308" font-size="12.6">*</text>
+      <text class="hero-star" x="423" y="153" font-size="15.0">*</text>
+      <text class="hero-star" x="986" y="66" font-size="9.1">*</text>
+      <text class="hero-star" x="543" y="160" font-size="10.1">*</text>
+      <text class="hero-star" x="433" y="385" font-size="15.0">*</text>
+      <text class="hero-star" x="826" y="274" font-size="12.6">*</text>
+      <text class="hero-star" x="350" y="69" font-size="12.5">*</text>
+      <text class="hero-star" x="651" y="216" font-size="9.3">*</text>
+      <text class="hero-star" x="343" y="295" font-size="9.9">*</text>
+      <text class="hero-star" x="354" y="239" font-size="11.6">*</text>
+      <text class="hero-star" x="750" y="206" font-size="9.1">*</text>
+      <text class="hero-star" x="574" y="30" font-size="12.7">*</text>
+      <text class="hero-star" x="755" y="386" font-size="14.0">*</text>
+      <text class="hero-star" x="1053" y="384" font-size="11.3">*</text>
+      <text class="hero-star" x="1238" y="396" font-size="9.4">*</text>
+      <text class="hero-star" x="640" y="388" font-size="10.3">*</text>
+      <text class="hero-star" x="588" y="326" font-size="12.8">*</text>
+      <text class="hero-star" x="1011" y="112" font-size="9.1">*</text>
+      <text class="hero-star" x="972" y="286" font-size="11.2">*</text>
+      <text class="hero-star" x="1226" y="206" font-size="12.7">*</text>
+      <text class="hero-star" x="1183" y="54" font-size="9.8">*</text>
 
       <!-- 8 stars, evenly distributed across x:0-300, y:0-600 — a 2-column x 4-row grid, each star
            centered in its own 150x150 cell (columns at x=75/225, rows at y=75/225/375/525), not
            randomized like the rest of the field. -->
-      <text class="hero-star" x="75" y="75" font-size="11.5">*</text>
-      <text class="hero-star" x="225" y="75" font-size="12.0">*</text>
-      <text class="hero-star" x="75" y="250" font-size="10.8">*</text>
-      <text class="hero-star" x="225" y="250" font-size="13.2">*</text>
-      <text class="hero-star" x="75" y="375" font-size="11.0">*</text>
-      <text class="hero-star" x="225" y="375" font-size="12.5">*</text>
-      <text class="hero-star" x="75" y="525" font-size="10.5">*</text>
-      <text class="hero-star" x="225" y="525" font-size="11.8">*</text>
+      <text class="hero-star" x="75" y="52" font-size="11.5">*</text>
+      <text class="hero-star" x="225" y="52" font-size="12.0">*</text>
+      <text class="hero-star" x="75" y="175" font-size="10.8">*</text>
+      <text class="hero-star" x="225" y="175" font-size="13.2">*</text>
+      <text class="hero-star" x="75" y="262" font-size="11.0">*</text>
+      <text class="hero-star" x="225" y="262" font-size="12.5">*</text>
+      <text class="hero-star" x="75" y="368" font-size="10.5">*</text>
+      <text class="hero-star" x="225" y="368" font-size="11.8">*</text>
 
       <!-- Ursa Minor -->
-      <text class="hero-star" x="50" y="300" font-size="12.8" data-constellation="Ursa Minor" data-const-order="0">*</text>
-      <text class="hero-star" x="70" y="315" font-size="9.2" data-constellation="Ursa Minor" data-const-order="1">*</text>
-      <text class="hero-star" x="85" y="335" font-size="10.7" data-constellation="Ursa Minor" data-const-order="2">*</text>
-      <text class="hero-star" x="100" y="355" font-size="10.3" data-constellation="Ursa Minor" data-const-order="3">*</text>
-      <text class="hero-star" x="120" y="345" font-size="13.4" data-constellation="Ursa Minor" data-const-order="4">*</text>
-      <text class="hero-star" x="135" y="360" font-size="13.1" data-constellation="Ursa Minor" data-const-order="5">*</text>
-      <text class="hero-star" x="115" y="375" font-size="14.4" data-constellation="Ursa Minor" data-const-order="6">*</text>
+      <text class="hero-star" x="50" y="210" font-size="12.8" data-constellation="Ursa Minor" data-const-order="0">*</text>
+      <text class="hero-star" x="70" y="220" font-size="9.2" data-constellation="Ursa Minor" data-const-order="1">*</text>
+      <text class="hero-star" x="85" y="234" font-size="10.7" data-constellation="Ursa Minor" data-const-order="2">*</text>
+      <text class="hero-star" x="100" y="248" font-size="10.3" data-constellation="Ursa Minor" data-const-order="3">*</text>
+      <text class="hero-star" x="120" y="241" font-size="13.4" data-constellation="Ursa Minor" data-const-order="4">*</text>
+      <text class="hero-star" x="135" y="252" font-size="13.1" data-constellation="Ursa Minor" data-const-order="5">*</text>
+      <text class="hero-star" x="115" y="262" font-size="14.4" data-constellation="Ursa Minor" data-const-order="6">*</text>
 
       <!-- Cassiopeia -->
-      <text class="hero-star" x="280" y="440" font-size="9.5" data-constellation="Cassiopeia" data-const-order="0">*</text>
-      <text class="hero-star" x="315" y="430" font-size="11.5" data-constellation="Cassiopeia" data-const-order="1">*</text>
-      <text class="hero-star" x="350" y="455" font-size="9.2" data-constellation="Cassiopeia" data-const-order="2">*</text>
-      <text class="hero-star" x="385" y="435" font-size="10.3" data-constellation="Cassiopeia" data-const-order="3">*</text>
-      <text class="hero-star" x="420" y="450" font-size="12.0" data-constellation="Cassiopeia" data-const-order="4">*</text>
+      <text class="hero-star" x="280" y="308" font-size="9.5" data-constellation="Cassiopeia" data-const-order="0">*</text>
+      <text class="hero-star" x="315" y="301" font-size="11.5" data-constellation="Cassiopeia" data-const-order="1">*</text>
+      <text class="hero-star" x="350" y="318" font-size="9.2" data-constellation="Cassiopeia" data-const-order="2">*</text>
+      <text class="hero-star" x="385" y="304" font-size="10.3" data-constellation="Cassiopeia" data-const-order="3">*</text>
+      <text class="hero-star" x="420" y="315" font-size="12.0" data-constellation="Cassiopeia" data-const-order="4">*</text>
 
       <!-- Cepheus -->
-      <text class="hero-star" x="430" y="180" font-size="9.2" data-constellation="Cepheus" data-const-order="0">*</text>
-      <text class="hero-star" x="400" y="220" font-size="10.2" data-constellation="Cepheus" data-const-order="1">*</text>
-      <text class="hero-star" x="415" y="260" font-size="12.9" data-constellation="Cepheus" data-const-order="2">*</text>
-      <text class="hero-star" x="445" y="260" font-size="12.3" data-constellation="Cepheus" data-const-order="3">*</text>
-      <text class="hero-star" x="460" y="220" font-size="10.3" data-constellation="Cepheus" data-const-order="4">*</text>
+      <text class="hero-star" x="430" y="126" font-size="9.2" data-constellation="Cepheus" data-const-order="0">*</text>
+      <text class="hero-star" x="400" y="154" font-size="10.2" data-constellation="Cepheus" data-const-order="1">*</text>
+      <text class="hero-star" x="415" y="182" font-size="12.9" data-constellation="Cepheus" data-const-order="2">*</text>
+      <text class="hero-star" x="445" y="182" font-size="12.3" data-constellation="Cepheus" data-const-order="3">*</text>
+      <text class="hero-star" x="460" y="154" font-size="10.3" data-constellation="Cepheus" data-const-order="4">*</text>
 
       <!-- Leo -->
-      <text class="hero-star" x="950" y="420" font-size="14.0" data-constellation="Leo" data-const-order="0">*</text>
-      <text class="hero-star" x="955" y="445" font-size="9.8" data-constellation="Leo" data-const-order="1">*</text>
-      <text class="hero-star" x="970" y="465" font-size="11.5" data-constellation="Leo" data-const-order="2">*</text>
-      <text class="hero-star" x="965" y="485" font-size="10.2" data-constellation="Leo" data-const-order="3">*</text>
-      <text class="hero-star" x="950" y="498" font-size="9.5" data-constellation="Leo" data-const-order="4">*</text>
-      <text class="hero-star" x="935" y="490" font-size="10.8" data-constellation="Leo" data-const-order="5">*</text>
-      <text class="hero-star" x="1025" y="475" font-size="12.4" data-constellation="Leo" data-const-order="6">*</text>
-      <text class="hero-star" x="1020" y="440" font-size="9.6" data-constellation="Leo" data-const-order="7">*</text>
-      <text class="hero-star" x="1080" y="455" font-size="13.6" data-constellation="Leo" data-const-order="8">*</text>
+      <text class="hero-star" x="950" y="294" font-size="14.0" data-constellation="Leo" data-const-order="0">*</text>
+      <text class="hero-star" x="955" y="312" font-size="9.8" data-constellation="Leo" data-const-order="1">*</text>
+      <text class="hero-star" x="970" y="326" font-size="11.5" data-constellation="Leo" data-const-order="2">*</text>
+      <text class="hero-star" x="965" y="340" font-size="10.2" data-constellation="Leo" data-const-order="3">*</text>
+      <text class="hero-star" x="950" y="349" font-size="9.5" data-constellation="Leo" data-const-order="4">*</text>
+      <text class="hero-star" x="935" y="343" font-size="10.8" data-constellation="Leo" data-const-order="5">*</text>
+      <text class="hero-star" x="1025" y="332" font-size="12.4" data-constellation="Leo" data-const-order="6">*</text>
+      <text class="hero-star" x="1020" y="308" font-size="9.6" data-constellation="Leo" data-const-order="7">*</text>
+      <text class="hero-star" x="1080" y="318" font-size="13.6" data-constellation="Leo" data-const-order="8">*</text>
 
       <!-- Top strip fill (y: 600-900, the ceiling extension) — same stratified
            grid-cell + jitter placement as the rest of the random field. -->
-      <text class="hero-star" x="662" y="770" font-size="11.4">*</text>
-      <text class="hero-star" x="768" y="847" font-size="14.8">*</text>
-      <text class="hero-star" x="930" y="665" font-size="11.7">*</text>
-      <text class="hero-star" x="290" y="621" font-size="12.3">*</text>
-      <text class="hero-star" x="602" y="818" font-size="14.0">*</text>
-      <text class="hero-star" x="811" y="745" font-size="9.8">*</text>
-      <text class="hero-star" x="608" y="680" font-size="14.6">*</text>
-      <text class="hero-star" x="394" y="851" font-size="11.9">*</text>
-      <text class="hero-star" x="1123" y="647" font-size="9.3">*</text>
-      <text class="hero-star" x="212" y="724" font-size="13.4">*</text>
-      <text class="hero-star" x="146" y="765" font-size="13.3">*</text>
-      <text class="hero-star" x="1192" y="746" font-size="13.7">*</text>
-      <text class="hero-star" x="142" y="827" font-size="9.9">*</text>
-      <text class="hero-star" x="398" y="727" font-size="9.7">*</text>
-      <text class="hero-star" x="291" y="844" font-size="9.7">*</text>
-      <text class="hero-star" x="501" y="659" font-size="10.8">*</text>
-      <text class="hero-star" x="1116" y="858" font-size="14.9">*</text>
-      <text class="hero-star" x="789" y="625" font-size="11.5">*</text>
+      <text class="hero-star" x="662" y="539" font-size="11.4">*</text>
+      <text class="hero-star" x="768" y="593" font-size="14.8">*</text>
+      <text class="hero-star" x="930" y="465" font-size="11.7">*</text>
+      <text class="hero-star" x="290" y="435" font-size="12.3">*</text>
+      <text class="hero-star" x="602" y="573" font-size="14.0">*</text>
+      <text class="hero-star" x="811" y="522" font-size="9.8">*</text>
+      <text class="hero-star" x="608" y="476" font-size="14.6">*</text>
+      <text class="hero-star" x="394" y="596" font-size="11.9">*</text>
+      <text class="hero-star" x="1123" y="453" font-size="9.3">*</text>
+      <text class="hero-star" x="212" y="507" font-size="13.4">*</text>
+      <text class="hero-star" x="146" y="536" font-size="13.3">*</text>
+      <text class="hero-star" x="1192" y="522" font-size="13.7">*</text>
+      <text class="hero-star" x="142" y="579" font-size="9.9">*</text>
+      <text class="hero-star" x="398" y="509" font-size="9.7">*</text>
+      <text class="hero-star" x="291" y="591" font-size="9.7">*</text>
+      <text class="hero-star" x="501" y="461" font-size="10.8">*</text>
+      <text class="hero-star" x="1116" y="601" font-size="14.9">*</text>
+      <text class="hero-star" x="789" y="438" font-size="11.5">*</text>
 
       <!-- Corona Borealis (Northern Crown) — a simple arc of 7 stars, fits neatly in the left
            side of the new top strip. -->
-      <text class="hero-star" x="60" y="620" font-size="9.4" data-constellation="Corona Borealis" data-const-order="0">*</text>
-      <text class="hero-star" x="75" y="635" font-size="11.8" data-constellation="Corona Borealis" data-const-order="1">*</text>
-      <text class="hero-star" x="95" y="645" font-size="13.2" data-constellation="Corona Borealis" data-const-order="2">*</text>
-      <text class="hero-star" x="120" y="648" font-size="14.5" data-constellation="Corona Borealis" data-const-order="3">*</text>
-      <text class="hero-star" x="145" y="642" font-size="12.6" data-constellation="Corona Borealis" data-const-order="4">*</text>
-      <text class="hero-star" x="165" y="628" font-size="10.9" data-constellation="Corona Borealis" data-const-order="5">*</text>
-      <text class="hero-star" x="180" y="615" font-size="9.7" data-constellation="Corona Borealis" data-const-order="6">*</text>
+      <text class="hero-star" x="60" y="434" font-size="9.4" data-constellation="Corona Borealis" data-const-order="0">*</text>
+      <text class="hero-star" x="75" y="444" font-size="11.8" data-constellation="Corona Borealis" data-const-order="1">*</text>
+      <text class="hero-star" x="95" y="451" font-size="13.2" data-constellation="Corona Borealis" data-const-order="2">*</text>
+      <text class="hero-star" x="120" y="454" font-size="14.5" data-constellation="Corona Borealis" data-const-order="3">*</text>
+      <text class="hero-star" x="145" y="449" font-size="12.6" data-constellation="Corona Borealis" data-const-order="4">*</text>
+      <text class="hero-star" x="165" y="440" font-size="10.9" data-constellation="Corona Borealis" data-const-order="5">*</text>
+      <text class="hero-star" x="180" y="430" font-size="9.7" data-constellation="Corona Borealis" data-const-order="6">*</text>
 
       <!-- Cygnus (Northern Cross) — Deneb/Sadr/Albireo form the long spine, Gienah and Delta
            Cygni cross it at Sadr (index 1) as the wings — a real branch, like Leo's sickle/body,
            on the right side of the new top strip. -->
-      <text class="hero-star" x="1010" y="860" font-size="15.0" data-constellation="Cygnus" data-const-order="0">*</text>
-      <text class="hero-star" x="1010" y="790" font-size="11.3" data-constellation="Cygnus" data-const-order="1">*</text>
-      <text class="hero-star" x="1010" y="710" font-size="12.7" data-constellation="Cygnus" data-const-order="2">*</text>
-      <text class="hero-star" x="950" y="800" font-size="10.4" data-constellation="Cygnus" data-const-order="3">*</text>
-      <text class="hero-star" x="1075" y="785" font-size="10.1" data-constellation="Cygnus" data-const-order="4">*</text>
+      <text class="hero-star" x="1010" y="602" font-size="15.0" data-constellation="Cygnus" data-const-order="0">*</text>
+      <text class="hero-star" x="1010" y="553" font-size="11.3" data-constellation="Cygnus" data-const-order="1">*</text>
+      <text class="hero-star" x="1010" y="497" font-size="12.7" data-constellation="Cygnus" data-const-order="2">*</text>
+      <text class="hero-star" x="950" y="560" font-size="10.4" data-constellation="Cygnus" data-const-order="3">*</text>
+      <text class="hero-star" x="1075" y="550" font-size="10.1" data-constellation="Cygnus" data-const-order="4">*</text>
     </svg>
   </div>
 
@@ -1180,8 +1261,18 @@
       <span class="spec-meta">UNDERGRAD</span>
     </div>
     <div class="spec-row">
-      <span class="spec-key">TOOLS</span>
-      <span class="spec-val">SolidWorks · MATLAB &amp; Simulink · ANSYS · Arduino/C++ · Python · CNC Milling · TIG Welding</span>
+      <span class="spec-key">DESIGN</span>
+      <span class="spec-val">SolidWorks · AutoCAD · ANSYS</span>
+      <span class="spec-meta">--</span>
+    </div>
+    <div class="spec-row">
+      <span class="spec-key">CONTROLS / ROBOTICS</span>
+      <span class="spec-val">MATLAB &amp; Simulink · Stateflow · Arduino/C++ · Python</span>
+      <span class="spec-meta">--</span>
+    </div>
+    <div class="spec-row">
+      <span class="spec-key">FABRICATION</span>
+      <span class="spec-val">CNC Milling · Lathe · TIG Welding · Riveting · 3D Printing</span>
       <span class="spec-meta">--</span>
     </div>
   </div>
@@ -1193,7 +1284,9 @@
 
   <div class="work-list" id="workList">
 
-      <div class="work-item">
+      <p class="work-section-label">FEATURED PROJECTS</p>
+      <p class="work-section-sub">My primary case studies — designed, fabricated, programmed, and tested end to end.</p>
+      <div class="work-item featured">
         <button class="work-row" data-kind="img" data-preview="images/squirp-robot.png">
           <span class="work-num">01</span>
           <span class="work-name">Autonomous Campus Tour Robot</span>
@@ -1208,6 +1301,24 @@
                 <img src="images/squirp-robot.png" alt="Assembled autonomous campus tour robot with ultrasonic sensors, GPS float, and Arduino electronics" loading="lazy">
               </div>
               <div class="work-detail-copy">
+                <div class="project-summary">
+                  <div>
+                    <p class="project-summary-label">WHAT</p>
+                    <p class="project-summary-value">A 3D-printed autonomous ground robot that navigates a real outdoor campus course to waypoints mapped onto actual buildings.</p>
+                  </div>
+                  <div>
+                    <p class="project-summary-label">ROLE</p>
+                    <p class="project-summary-value">Designed and fabricated the robot; wrote the navigation and target-reaching logic.</p>
+                  </div>
+                  <div>
+                    <p class="project-summary-label">TECH</p>
+                    <p class="project-summary-value">LiDAR + ultrasonic sensor fusion · Arduino · MQTT/Wi-Fi telemetry · mechanical design &amp; 3D printing</p>
+                  </div>
+                  <div>
+                    <p class="project-summary-label">RESULT</p>
+                    <p class="project-summary-value">Navigated a full outdoor obstacle course to real campus landmarks using live multi-sensor odometry.</p>
+                  </div>
+                </div>
                 <p>Designed and fabricated a 3D-printed autonomous ground robot integrating a
                 YDLIDAR G4 laser scanner and multiple ultrasonic sensors for real-time obstacle
                 detection. Wrote the path-planning and target-reaching logic in Arduino,
@@ -1261,7 +1372,7 @@
         </div>
       </div>
 
-      <div class="work-item">
+      <div class="work-item featured">
         <button class="work-row" data-kind="img" data-preview="images/gc-expo-poster.jpg">
           <span class="work-num">02</span>
           <span class="work-name">Programmable Gas Chromatography Oven</span>
@@ -1276,6 +1387,35 @@
                 <img src="images/gc-expo-poster.jpg" alt="The completed GC oven presented alongside its poster at Stevens Institute's Innovation Expo" loading="lazy">
               </div>
               <div class="work-detail-copy">
+                <div class="project-summary">
+                  <div>
+                    <p class="project-summary-label">WHAT</p>
+                    <p class="project-summary-value">A programmable gas chromatography oven engineered around fast cooldown between sample runs, not just fast heating.</p>
+                  </div>
+                  <div>
+                    <p class="project-summary-label">ROLE</p>
+                    <p class="project-summary-value">Led the mechanical design on a 5-person, faculty-advised senior capstone team.</p>
+                  </div>
+                  <div>
+                    <p class="project-summary-label">TECH</p>
+                    <p class="project-summary-value">SolidWorks structural/thermal/CFD FEA · CNC machining, lathe work, riveting, TIG welding · Arduino PID control · thermocouple instrumentation</p>
+                  </div>
+                  <div class="project-metric-callout">400°C &rarr; &lt;50°C in ~20 min</div>
+                </div>
+                <div class="project-skill-tags">
+                  <span class="exp-tag">SolidWorks</span>
+                  <span class="exp-tag">Structural FEA</span>
+                  <span class="exp-tag">Thermal Analysis</span>
+                  <span class="exp-tag">CFD</span>
+                  <span class="exp-tag">CNC Machining</span>
+                  <span class="exp-tag">Lathe Work</span>
+                  <span class="exp-tag">Riveting</span>
+                  <span class="exp-tag">TIG Welding</span>
+                  <span class="exp-tag">Arduino</span>
+                  <span class="exp-tag">PID Control</span>
+                  <span class="exp-tag">Thermocouple Instrumentation</span>
+                  <span class="exp-tag">Experimental Validation</span>
+                </div>
                 <p>Led the mechanical design team on a faculty-advised senior capstone (Group
                 A7, sponsored by GOW-MAC Instrument Co., advised by Dr. Zahra Pournorouz)
                 building a programmable GC oven — the core challenge being not just fast
@@ -1344,7 +1484,7 @@
         </div>
       </div>
 
-      <div class="work-item">
+      <div class="work-item featured">
         <button class="work-row" data-kind="img" data-preview="images/sorting-completed-sim.jpg">
           <span class="work-num">03</span>
           <span class="work-name">Autonomous Puck Sorting &amp; Wall Avoidance</span>
@@ -1359,6 +1499,21 @@
                 <img src="images/sorting-completed-sim.jpg" alt="Completed simulation showing the robot at the origin after delivering both pucks" loading="lazy">
               </div>
               <div class="work-detail-copy">
+                <div class="project-summary">
+                  <div>
+                    <p class="project-summary-label">WHAT</p>
+                    <p class="project-summary-value">An autonomous robot that locates two color-coded pucks, delivers each to its matching zone, and returns to origin.</p>
+                  </div>
+                  <div>
+                    <p class="project-summary-label">ROLE</p>
+                    <p class="project-summary-value">5-person team member; built the wall-avoidance safety layer.</p>
+                  </div>
+                  <div>
+                    <p class="project-summary-label">TECH</p>
+                    <p class="project-summary-value">MATLAB &amp; Stateflow state machine · color detection · analytically-derived geometric safety model</p>
+                  </div>
+                  <div class="project-metric-callout">6/6 trials &middot; 82&ndash;167s</div>
+                </div>
                 <p>Built an autonomous puck-sorting robot in MATLAB's Robotics Playground with
                 a 5-person team (ME 598, Group WS8): the robot locates two RGB-colored pucks
                 using a forward-facing color detector, delivers each to its matching colored
@@ -1403,7 +1558,9 @@
         </div>
       </div>
 
-      <div class="work-item">
+      <p class="work-section-label">ADDITIONAL TECHNICAL WORK</p>
+      <p class="work-section-sub">Further projects demonstrating breadth across kinematics, thermal systems, controls, and estimation.</p>
+      <div class="work-item additional">
         <button class="work-row" data-kind="img" data-preview="images/dobot-dh-diagram.png">
           <span class="work-num">04</span>
           <span class="work-name">Dobot Robot Arm Kinematics</span>
@@ -1454,7 +1611,7 @@
         </div>
       </div>
 
-      <div class="work-item">
+      <div class="work-item additional">
         <button class="work-row" data-kind="img" data-preview="images/coldplate-channel-geometry.png">
           <span class="work-num">05</span>
           <span class="work-name">MCM Cold Plate Design</span>
@@ -1470,13 +1627,16 @@
                 <p>Designed an aluminum (k = 190 W/m&middot;K) microchannel cold plate for
                 IBM's Thermal Conduction Module, sized to dissipate a 108 W chip load while
                 holding surface temperature under 40°C. Ran parametric SolidWorks studies
-                sweeping channel geometry and flow rate, then compared alternative plate
-                materials — PVC's low conductivity (k = 0.147 W/m&middot;K) let the surface
-                spike to 6076°C, underscoring how sensitive the design is to material choice.</p>
+                sweeping channel geometry and flow rate, then swapped in PVC (k = 0.147
+                W/m&middot;K) as a deliberately unsuitable comparison material — under the same
+                model assumptions, that produced a nonphysical surface-temperature result,
+                illustrating just how strongly the design depends on thermal conductivity.</p>
                 <ul class="work-stats">
                   <li>Aluminum plate, k = 190 W/m&middot;K, 108 W chip load, &lt;40°C target</li>
                   <li>Parametric SolidWorks sweep over channel geometry and flow rate</li>
-                  <li>PVC alternative spiked to 6076°C — material choice matters</li>
+                  <li>Deliberately unsuitable PVC comparison (k = 0.147 W/m&middot;K) produced a
+                  nonphysical result under the model's assumptions — a sensitivity check, not a
+                  real operating condition</li>
                   <li>2-person team project, ME 354 Heat Transfer</li>
                 </ul>
                 <div class="work-gallery">
@@ -1502,7 +1662,7 @@
         </div>
       </div>
 
-      <div class="work-item">
+      <div class="work-item additional">
         <button class="work-row" data-kind="img" data-preview="images/auv-bode-margins.jpg">
           <span class="work-num">06</span>
           <span class="work-name">AUV Pitch Control Compensator</span>
@@ -1584,7 +1744,7 @@
         </div>
       </div>
 
-      <div class="work-item">
+      <div class="work-item additional">
         <button class="work-row" data-kind="img" data-preview="images/cone-hsv-pipeline.jpg">
           <span class="work-num">07</span>
           <span class="work-name">Vision-Based Obstacle Detection</span>
@@ -1630,7 +1790,7 @@
         </div>
       </div>
 
-      <div class="work-item">
+      <div class="work-item additional">
         <button class="work-row" data-kind="img" data-preview="images/rrt-scatter-plot.jpg">
           <span class="work-num">08</span>
           <span class="work-name">RRT Path Planning Under Localization Uncertainty</span>
@@ -1687,7 +1847,7 @@
         </div>
       </div>
 
-      <div class="work-item">
+      <div class="work-item additional">
         <button class="work-row" data-kind="img" data-preview="images/slam-comparison-plots.jpg">
           <span class="work-num">09</span>
           <span class="work-name">SLAM: Least Squares &amp; Kalman Filter Localization</span>
@@ -1760,6 +1920,7 @@
   <p class="index-kicker">03 / EXPERIENCE</p>
   <h2 class="stmt">Where I've worked.</h2>
 
+  <p class="spec-key" style="margin-bottom:16px;">PROFESSIONAL EXPERIENCE</p>
   <div class="manifest">
     <div class="manifest-row">
       <span class="manifest-date">JUN 2023 &ndash; AUG 2023</span>
@@ -1771,6 +1932,7 @@
     </div>
   </div>
 
+  <p class="spec-key" style="margin:36px 0 12px;">LEADERSHIP &amp; ENGINEERING ORGANIZATIONS</p>
   <div class="other-exp">
     <span class="exp-tag">SAE Baja</span>
     <span class="exp-tag">Club Lacrosse — Vice President</span>
@@ -2122,8 +2284,12 @@
   const STAR_BOX_X_MAX = 1250; // right edge of the eligible star box, in authored units — shared
     // by starAnchorLocal (for centering) and renderDebugGrid (for drawing), so the two can never
     // drift out of sync with each other the way two separately-hardcoded numbers eventually would.
-  const STAR_BOX_Y_MAX = 900; // ceiling — was 600, extended by 300 units — ties in with the
-    // y-clamp in enforceStarFloor below.
+  const STAR_BOX_Y_MAX = 630; // ceiling — was 900. All star y-coordinates were compressed by
+    // 0.7x (630 = 900*0.7) to bring the whole field down/closer to the hero content per the
+    // refinement spec ("stars sit too high, too much empty space below them") — this constant
+    // has to match that same compression so the floor/ceiling clamps and the debug grid stay
+    // consistent with where the stars actually are now. Ties in with the y-clamp in
+    // enforceStarFloor below.
   function starAnchorLocal() {
     // Anchor in hero-relative pixels (i.e., the same space starSvg's own viewBox now uses, since
     // it's kept 1:1 with .hero's real size) — recomputed fresh on every call, not cached, so it
